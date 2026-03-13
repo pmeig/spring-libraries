@@ -5,13 +5,33 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import pmeig.spring.libraries.logger.PmeigLoggerFactory
+import pmeig.spring.libraries.logger.correlation.correlationId
+import reactor.core.publisher.Mono
+import java.time.Duration
 
+val logger =
+  PmeigLoggerFactory.getLogger(TestController::class)
+//  LoggerFactory.getLogger(TestController::class.java)
 @RestController
 @RequestMapping("test")
-class TestController(
-) {
+class TestController {
+
   @GetMapping("hello")
-  fun hello() = "Hello from GET"
+  fun hello(): Mono<String> {
+//    try {
+//      Thread.sleep(5000)
+//    } catch (e: InterruptedException) {
+//
+//    }
+
+    return Mono.delay(Duration.ofSeconds(1)).map {
+      logger.info("Handling {} request {test.log} for hello {} endpoint by {spring.application.name}", "GET",
+        correlationId
+      )
+      createMessage("GET with correlation $correlationId")
+    }
+  }
 
   private fun createMessage(method: String): String {
     return "Hello from $method"
