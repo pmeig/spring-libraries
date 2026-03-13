@@ -1,3 +1,15 @@
 spring:
+  plugins:
+    pmeig:
+      logger:
+        correlation:
+          request: correlationId
   application:
     name: test
+
+test:
+  log: myLog
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} %X{test.property} - %msg%n"

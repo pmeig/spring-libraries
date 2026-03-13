@@ -22,6 +22,9 @@
             <email>pierrick.workspace@gmail.com</email>
         </contributor>
     </contributors>
+    <modules>
+        <module>logger</module>
+    </modules>
 
     <developers>
         <developer>
@@ -34,6 +37,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.test-plugin.version>2.22.2</maven.test-plugin.version>
         <java.version>25</java.version>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
         <junit.version>5.10.0</junit.version>
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>25</kotlin.compiler.jvmTarget>
