@@ -1,12 +1,17 @@
 package pmeig.spring.libraries.test
 
+import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
 //@EnablePmeigSecurity
-class TestApplication
+class TestApplication {
+}
 
 fun main(args: Array<String>) {
-  runApplication<TestApplication>(*args)
+  runApplication<TestApplication>(*args) {
+//    setWebApplicationType(WebApplicationType.SERVLET)
+    setWebApplicationType(WebApplicationType.REACTIVE)
+  }
 }
