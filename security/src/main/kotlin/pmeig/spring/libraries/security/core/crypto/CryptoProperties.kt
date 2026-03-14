@@ -3,13 +3,16 @@ package pmeig.spring.libraries.security.core.crypto
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 @ConfigurationProperties("spring.plugins.pmeig.security.crypto")
-data class CryptoProperties(
-  var secret: String = ""
+class CryptoProperties(
+  secret: String = ""
 ) {
-  fun getOrGenerateSecret(): String = secret.ifEmpty {
-    val random = (1..16).map { (('a'..'z') + ('A'..'Z') + ('0'..'9')).random() }.joinToString("")
-    println("Generated crypto secret: $random")
-    secret = random
-    random
-  }
+  var secret: String = secret
+    get() = field.ifEmpty {
+      val alphanumeric = ('a'..'z') + ('A'..'Z') + ('0'..'9')
+      val random = (1..16).map { alphanumeric.random() }.joinToString("")
+      println("Generated crypto secret: $random")
+      secret = random
+      random
+    }
+
 }

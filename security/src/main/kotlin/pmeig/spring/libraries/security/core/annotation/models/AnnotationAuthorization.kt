@@ -2,12 +2,12 @@ package pmeig.spring.libraries.security.core.annotation.models
 
 import org.springframework.web.bind.annotation.RequestMethod
 import pmeig.spring.libraries.security.core.annotation.PmeigSecurity
+import pmeig.spring.libraries.security.core.authorization.SecurityAuthorization
 import pmeig.spring.libraries.security.core.models.SecurityFeatures
 
-data class PmeigAuthorization(
-  val path: Array<String> = emptyArray(),
+data class AnnotationAuthorization(
+  val path: List<String> = emptyList(),
   val methods: List<RequestMethod> = listOf(),
-  val type: PmeigSecurity.Type = PmeigSecurity.Type.OR,
   var public: Boolean = false,
   var denied: Boolean = false,
   val accepted: MutableList<SecurityFeatures> = mutableListOf(),
@@ -19,6 +19,17 @@ data class PmeigAuthorization(
 
   fun addRejected(vararg features: String, type: PmeigSecurity.Type = PmeigSecurity.Type.OR) =
     addFeatures(type, features.toList()) { rejected }
+
+  fun toSecuritiesAuthorization(): List<SecurityAuthorization> {
+    return accepted.map {
+      toSecurityAuthorization(true, it)
+    } + rejected.map {
+      toSecurityAuthorization(false, it)
+    }
+  }
+
+  private fun toSecurityAuthorization(contain: Boolean, features: SecurityFeatures) =
+    SecurityAuthorization(path, methods, features.features.toSet(), public, denied, contain, features.type)
 
   private fun addFeatures(
     type: PmeigSecurity.Type,
@@ -35,13 +46,12 @@ data class PmeigAuthorization(
     if (this === other) return true
     if (javaClass != other?.javaClass) return false
 
-    other as PmeigAuthorization
+    other as AnnotationAuthorization
 
     if (public != other.public) return false
     if (denied != other.denied) return false
-    if (!path.contentEquals(other.path)) return false
+    if (!path.containsAll(other.path)) return false
     if (methods != other.methods) return false
-    if (type != other.type) return false
     if (accepted != other.accepted) return false
     if (rejected != other.rejected) return false
 
@@ -51,9 +61,8 @@ data class PmeigAuthorization(
   override fun hashCode(): Int {
     var result = public.hashCode()
     result = 31 * result + denied.hashCode()
-    result = 31 * result + path.contentHashCode()
+    result = 31 * result + path.hashCode()
     result = 31 * result + methods.hashCode()
-    result = 31 * result + type.hashCode()
     result = 31 * result + accepted.hashCode()
     result = 31 * result + rejected.hashCode()
     return result

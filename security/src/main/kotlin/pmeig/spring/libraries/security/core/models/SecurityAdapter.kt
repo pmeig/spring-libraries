@@ -15,46 +15,46 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 interface SecurityAdapter {
-  fun permitAll(path: Array<String>, methods: List<RequestMethod>)
-  fun denyAll(path: Array<String>, methods: List<RequestMethod>)
-  fun hasAnyAuthority(path: Array<String>, methods: List<RequestMethod>, vararg authorities: String)
-  fun hasNotAnyAuthority(path: Array<String>, methods: List<RequestMethod>, vararg authorities: String)
-  fun hasAllAuthorities(path: Array<String>, methods: List<RequestMethod>, vararg authorities: String)
-  fun hasNoneAuthorities(path: Array<String>, methods: List<RequestMethod>, vararg authorities: String)
+  fun permitAll(path: List<String>, methods: List<RequestMethod>)
+  fun denyAll(path: List<String>, methods: List<RequestMethod>)
+  fun hasAnyAuthority(path: List<String>, methods: List<RequestMethod>, vararg authorities: String)
+  fun hasNotAnyAuthority(path: List<String>, methods: List<RequestMethod>, vararg authorities: String)
+  fun hasAllAuthorities(path: List<String>, methods: List<RequestMethod>, vararg authorities: String)
+  fun hasNoneAuthorities(path: List<String>, methods: List<RequestMethod>, vararg authorities: String)
 }
 
 internal class ServletSecurityAdapter(private val configurer: AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry) :
   SecurityAdapter {
 
-  override fun permitAll(path: Array<String>, methods: List<RequestMethod>) {
+  override fun permitAll(path: List<String>, methods: List<RequestMethod>) {
     applyAuthority(path, methods) { it.permitAll() }
   }
 
-  override fun denyAll(path: Array<String>, methods: List<RequestMethod>) {
+  override fun denyAll(path: List<String>, methods: List<RequestMethod>) {
     applyAuthority(path, methods) { it.denyAll() }
   }
 
-  override fun hasAnyAuthority(path: Array<String>, methods: List<RequestMethod>, vararg authorities: String) {
+  override fun hasAnyAuthority(path: List<String>, methods: List<RequestMethod>, vararg authorities: String) {
     applyAuthority(path, methods) { it.hasAnyAuthority(*authorities) }
   }
 
-  override fun hasNotAnyAuthority(path: Array<String>, methods: List<RequestMethod>, vararg authorities: String) {
+  override fun hasNotAnyAuthority(path: List<String>, methods: List<RequestMethod>, vararg authorities: String) {
     applyAuthority(path, methods) { it.not().hasAnyAuthority(*authorities) }
   }
 
-  override fun hasAllAuthorities(path: Array<String>, methods: List<RequestMethod>, vararg authorities: String) {
+  override fun hasAllAuthorities(path: List<String>, methods: List<RequestMethod>, vararg authorities: String) {
     applyAuthority(path, methods) { it.hasAllAuthorities(*authorities) }
   }
 
-  override fun hasNoneAuthorities(path: Array<String>, methods: List<RequestMethod>, vararg authorities: String) {
+  override fun hasNoneAuthorities(path: List<String>, methods: List<RequestMethod>, vararg authorities: String) {
     applyAuthority(path, methods) { it.not().hasAllAuthorities(*authorities) }
   }
 
   private fun applyAuthority(
-    path: Array<String>,
+    path: List<String>,
     methods: List<RequestMethod>,
     function: (AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl) -> Unit
-  ) = methods.forEach { method -> function(configurer.requestMatchers(method.asHttpMethod(), *path)) }
+  ) = methods.forEach { method -> function(configurer.requestMatchers(method.asHttpMethod(), *path.toTypedArray())) }
 }
 
 internal class AuthorityReactiveAllAuthorizationManager(private val not: Boolean, vararg authorities: String) :
@@ -79,19 +79,19 @@ internal class AuthorityReactiveAllAuthorizationManager(private val not: Boolean
 internal class ReactiveSecurityAdapter(private val configurer: ServerHttpSecurity.AuthorizeExchangeSpec) :
   SecurityAdapter {
 
-  override fun permitAll(path: Array<String>, methods: List<RequestMethod>) {
+  override fun permitAll(path: List<String>, methods: List<RequestMethod>) {
     applyAuthority(path, methods) { it.permitAll() }
   }
 
-  override fun denyAll(path: Array<String>, methods: List<RequestMethod>) {
+  override fun denyAll(path: List<String>, methods: List<RequestMethod>) {
     applyAuthority(path, methods) { it.denyAll() }
   }
 
-  override fun hasAnyAuthority(path: Array<String>, methods: List<RequestMethod>, vararg authorities: String) {
+  override fun hasAnyAuthority(path: List<String>, methods: List<RequestMethod>, vararg authorities: String) {
     applyAuthority(path, methods) { it.hasAnyAuthority(*authorities) }
   }
 
-  override fun hasNotAnyAuthority(path: Array<String>, methods: List<RequestMethod>, vararg authorities: String) {
+  override fun hasNotAnyAuthority(path: List<String>, methods: List<RequestMethod>, vararg authorities: String) {
     applyAuthority(path, methods) {
       it.access { authentication, _ ->
         authentication.map { auth ->
@@ -103,20 +103,20 @@ internal class ReactiveSecurityAdapter(private val configurer: ServerHttpSecurit
     }
   }
 
-  override fun hasAllAuthorities(path: Array<String>, methods: List<RequestMethod>, vararg authorities: String) {
+  override fun hasAllAuthorities(path: List<String>, methods: List<RequestMethod>, vararg authorities: String) {
     applyAuthority(path, methods) { it.access(AuthorityReactiveAllAuthorizationManager(false, *authorities)) }
   }
 
-  override fun hasNoneAuthorities(path: Array<String>, methods: List<RequestMethod>, vararg authorities: String) {
+  override fun hasNoneAuthorities(path: List<String>, methods: List<RequestMethod>, vararg authorities: String) {
     applyAuthority(path, methods) { it.access(AuthorityReactiveAllAuthorizationManager(true, *authorities)) }
   }
 
 
   private fun applyAuthority(
-    path: Array<String>,
+    path: List<String>,
     methods: List<RequestMethod>,
     function: (ServerHttpSecurity.AuthorizeExchangeSpec.Access) -> Unit
-  ) = methods.forEach { method -> function(configurer.pathMatchers(method.asHttpMethod(), *path)) }
+  ) = methods.forEach { method -> function(configurer.pathMatchers(method.asHttpMethod(), *path.toTypedArray())) }
 
 }
 

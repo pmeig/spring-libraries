@@ -20,7 +20,8 @@ import pmeig.spring.libraries.security.core.models.api.ServletAdapter
 @RequestMapping("/login")
 @ConditionalOnWebApplication(type = SERVLET)
 @ConditionalOnProperty(prefix = "spring.plugins.pmeig.security.auth", name = ["login"], havingValue = "true")
-class JwtLoginController(private val jwtService: JwtService, private val tokenManager: TokenManager) {
+class JwtLoginController(private val jwtService: JwtService,
+                         private val tokenManager: TokenManager) {
   @PostMapping
   fun login(@RequestBody user: RequestUser): ResponseEntity<*> {
     val apiResponse: ApiResponse<ResponseEntity<*>> = ServletAdapter()

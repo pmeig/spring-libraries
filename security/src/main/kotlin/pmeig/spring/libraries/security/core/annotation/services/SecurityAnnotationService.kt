@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.RestController
 import pmeig.spring.libraries.security.core.annotation.PmeigSecurity
 import pmeig.spring.libraries.security.core.annotation.models.GlobalSecurity
 import pmeig.spring.libraries.security.core.annotation.models.PathConfig
-import pmeig.spring.libraries.security.core.annotation.models.PmeigAuthorization
+import pmeig.spring.libraries.security.core.annotation.models.AnnotationAuthorization
+import pmeig.spring.libraries.security.core.authorization.SecurityAuthorization
 import java.lang.reflect.Method
 import java.util.function.Consumer
 
@@ -31,8 +32,8 @@ class SecurityAnnotationService(applicationContext: ApplicationContext) {
     }
   }
 
-  fun findAllSecurityAnnotations(): Collection<PmeigAuthorization> {
-    val authorizations = mutableListOf<PmeigAuthorization>()
+  fun findAllSecurityAnnotations(): Collection<SecurityAuthorization> {
+    val authorizations = mutableListOf<SecurityAuthorization>()
     scanner.findCandidateComponents(basePackage)
       .forEach {
         val classname = Class.forName(it.beanClassName)
@@ -45,7 +46,7 @@ class SecurityAnnotationService(applicationContext: ApplicationContext) {
             parentPath,
             classname.declaredMethods.filter(filterMethods(globals)),
             apply
-          )
+          ).flatMap { it.toSecuritiesAuthorization() }
         )
       }
     return authorizations
@@ -54,7 +55,7 @@ class SecurityAnnotationService(applicationContext: ApplicationContext) {
   private fun toPmeigAuthorization(
     parentPath: List<String>,
     methods: List<Method>,
-    globalInjector: Consumer<PmeigAuthorization>
+    globalInjector: Consumer<AnnotationAuthorization>
   ) = methods.map { method ->
     createAuthorization(parentPath, method, globalInjector)
   }
@@ -62,20 +63,20 @@ class SecurityAnnotationService(applicationContext: ApplicationContext) {
   private fun createAuthorization(
     parentPath: List<String>,
     method: Method,
-    globalInjector: Consumer<PmeigAuthorization>
-  ): PmeigAuthorization {
+    globalInjector: Consumer<AnnotationAuthorization>
+  ): AnnotationAuthorization {
     val config = extractConfig(method, parentPath)
     val securities = AnnotatedElementUtils.findAllMergedAnnotations(method, PmeigSecurity::class.java).ifEmpty {
       setOf(PmeigSecurity())
     }
-    val auth = PmeigAuthorization(config.paths.toTypedArray(), config.method)
+    val auth = AnnotationAuthorization(config.paths, config.method)
     globalInjector.accept(auth)
     securities.takeWhile {
       auth.public = auth.public || it.public
       auth.denied = auth.denied || it.public
       !auth.public && !auth.denied
     }.forEach {
-      val setterFeatures = if (it.accepted) PmeigAuthorization::addAccepted else PmeigAuthorization::addRejected
+      val setterFeatures = if (it.accepted) AnnotationAuthorization::addAccepted else AnnotationAuthorization::addRejected
       setterFeatures(auth, it.value, it.type)
     }
     return auth
@@ -98,7 +99,7 @@ class SecurityAnnotationService(applicationContext: ApplicationContext) {
 
   private fun createInjectorGlobalSecurity(
     globals: Set<PmeigSecurity>
-  ): Consumer<PmeigAuthorization> {
+  ): Consumer<AnnotationAuthorization> {
 
     var isPublic = false
     var isDenied = false
@@ -110,7 +111,7 @@ class SecurityAnnotationService(applicationContext: ApplicationContext) {
     }.forEach { security ->
       globalSecurity.addFeature(security.accepted, mapFeatures(security), security.type)
     }
-    val apply = Consumer<PmeigAuthorization> { auth ->
+    val apply = Consumer<AnnotationAuthorization> { auth ->
       auth.apply {
         public = public || isPublic
         denied = denied || isDenied
