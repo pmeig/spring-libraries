@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package pmeig.spring.libraries.test.controllers
 
 import org.springframework.web.bind.annotation.GetMapping
@@ -5,6 +7,8 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import pmeig.spring.libraries.cache.core.model.CacheConfig
+import pmeig.spring.libraries.cache.core.model.CacheConfigsProperties
 import pmeig.spring.libraries.logger.PmeigLoggerFactory
 import pmeig.spring.libraries.logger.correlation.correlationId
 import reactor.core.publisher.Mono
@@ -15,7 +19,10 @@ val logger =
 //  LoggerFactory.getLogger(TestController::class.java)
 @RestController
 @RequestMapping("test")
-class TestController {
+class TestController(
+  private val configs: List<CacheConfig>,
+  private val cacheConfigsProperties: CacheConfigsProperties
+) {
 
   @GetMapping("hello")
   fun hello(): Mono<String> {
