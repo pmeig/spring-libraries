@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono
 @RestController
 @RequestMapping("/login")
 @ConditionalOnWebApplication(type = REACTIVE)
-@ConditionalOnProperty(prefix = "spring.plugins.pmeig.security.auth", name = ["login"], havingValue = "true")
+@ConditionalOnProperty(prefix = "spring.security.pmeig.auth", name = ["login"], havingValue = "jwt")
 class ReactiveJwtLoginController(private val jwtService: JwtService, private val tokenManager: TokenManager) {
   @PostMapping
   fun login(@RequestBody user: RequestUser): Mono<ServerResponse> {

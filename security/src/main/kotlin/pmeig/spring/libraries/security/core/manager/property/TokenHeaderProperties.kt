@@ -1,9 +1,11 @@
 package pmeig.spring.libraries.security.core.manager.property
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.context.annotation.Configuration
 
-@ConfigurationProperties("spring.plugins.pmeig.security.auth.token.header")
-data class TokenHeaderProperties(
+@Configuration
+@ConfigurationProperties("spring.security.pmeig.auth.token.header")
+class TokenHeaderProperties(
   var prefix: String = "Bearer ",
   var name: String = "Authorization"
 )

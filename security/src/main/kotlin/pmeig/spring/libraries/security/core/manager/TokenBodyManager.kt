@@ -6,7 +6,7 @@ import pmeig.spring.libraries.security.core.models.api.ApiRequest
 import pmeig.spring.libraries.security.core.models.api.ApiResponse
 
 @Component
-@ConditionalOnProperty(prefix = "spring.plugins.pmeig.security.auth.token", name = ["manager"], havingValue = "body")
+@ConditionalOnProperty(prefix = "spring.security.pmeig.auth.token", name = ["manager"], havingValue = "body")
 class TokenBodyManager: TokenManager {
   override fun getToken(request: ApiRequest): String? = request.body
 

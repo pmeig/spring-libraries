@@ -31,8 +31,8 @@ class ServletAdapter(
   override val body: String?
     get() = request?.body?.readAllBytes()?.toString(Charsets.UTF_8)
 
-  override fun cookies(consumer: () -> ResponseCookie): ApiResponse<ResponseEntity<*>> =
-    headers { it.add(HttpHeaders.SET_COOKIE, consumer().toString()) }
+  override fun cookies(supplier: () -> ResponseCookie): ApiResponse<ResponseEntity<*>> =
+    headers { it.add(HttpHeaders.SET_COOKIE, supplier().toString()) }
 
   override val cookies: List<HttpCookie>
     get() = request?.headers?.get("Cookie")?.flatMap {

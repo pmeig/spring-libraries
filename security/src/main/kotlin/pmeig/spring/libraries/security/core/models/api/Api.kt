@@ -21,6 +21,6 @@ interface ApiResponse<T> {
   fun status(status: HttpStatus): ApiResponse<T>
   fun body(content: Any?): ApiResponse<T>
   fun headers(consumer: (headers: HttpHeaders) -> Unit): ApiResponse<T>
-  fun cookies(consumer: () -> ResponseCookie): ApiResponse<T>
+  fun cookies(supplier: () -> ResponseCookie): ApiResponse<T>
   fun toResponseEntity(): T
 }

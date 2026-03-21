@@ -32,9 +32,9 @@ class ReactiveAdapter(private val request: ServerHttpRequest? = null): ApiReques
   override val body: String?
     get() = request?.body?.toString()
 
-  override fun cookies(consumer: () -> ResponseCookie): ApiResponse<Mono<ServerResponse>> {
+  override fun cookies(supplier: () -> ResponseCookie): ApiResponse<Mono<ServerResponse>> {
     val prev = responseCookie
-    responseCookie = { prev(it).cookie(consumer()) }
+    responseCookie = { prev(it).cookie(supplier()) }
     return this
   }
 

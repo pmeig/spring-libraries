@@ -1,6 +1,6 @@
 package pmeig.spring.libraries.security.core
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Import
 import pmeig.spring.libraries.security.authentication.core.JwtModule
@@ -13,15 +13,14 @@ annotation class EnablePmeigSecurity {
 }
 
 //@AutoConfiguration
-@ConditionalOnProperty(prefix = "spring.plugins.pmeig.security", name = ["enabled"], havingValue = "true", matchIfMissing = true)
-@ComponentScan(basePackageClasses = [PmeigSecurityAutoConfiguration::class], excludeFilters = [ComponentScan.Filter(EnablePmeigSecurity::class)])
-@Import(JwtModule::class)
+@ConditionalOnBooleanProperty(prefix = "spring.plugins.pmeig", name = ["security"], havingValue = true, matchIfMissing = true)
+@ComponentScan(basePackageClasses = [PmeigSecurityAutoConfiguration::class],
+  excludeFilters = [ComponentScan.Filter(EnablePmeigSecurity::class)])
 class PmeigSecurityAutoConfiguration {
 }
 
-@ComponentScan(basePackageClasses = [SecurityModule::class], lazyInit = true,
-  excludeFilters = [ComponentScan.Filter(EnablePmeigSecurity::class)])
-@Import(JwtModule::class)
+@ComponentScan(basePackageClasses = [SecurityModule::class, JwtModule::class], lazyInit = true,
+  excludeFilters = [ComponentScan.Filter(EnablePmeigSecurity::class, PmeigSecurityAutoConfiguration::class)])
 class SecurityModule {
 
 }

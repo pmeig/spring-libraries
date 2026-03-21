@@ -2,10 +2,12 @@ package pmeig.spring.libraries.security.core.manager.property
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.EnvironmentAware
+import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
 import java.time.Duration
 
-@ConfigurationProperties("spring.plugins.pmeig.security.auth.token.cookie")
+@Configuration
+@ConfigurationProperties("spring.security.pmeig.auth.token.cookie")
 class TokenCookieProperties(
   var name: String = "",
   var path: String = "/",
@@ -17,8 +19,7 @@ class TokenCookieProperties(
   var partitioned: Boolean = false
 ): EnvironmentAware, TokenExpirationProperty(exp) {
 
-  lateinit var tokenName: String
-    private set
+  final lateinit var tokenName: String
 
   override fun setEnvironment(environment: Environment) {
     tokenName = name.ifEmpty {

@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import pmeig.spring.libraries.security.core.annotation.PmeigSecurity
+import pmeig.spring.libraries.security.core.annotation.models.AnnotationAuthorization
 import pmeig.spring.libraries.security.core.annotation.models.GlobalSecurity
 import pmeig.spring.libraries.security.core.annotation.models.PathConfig
-import pmeig.spring.libraries.security.core.annotation.models.AnnotationAuthorization
 import pmeig.spring.libraries.security.core.authorization.SecurityAuthorization
 import java.lang.reflect.Method
 import java.util.function.Consumer

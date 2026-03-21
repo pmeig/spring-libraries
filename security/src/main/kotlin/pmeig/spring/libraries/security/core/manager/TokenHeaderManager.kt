@@ -7,7 +7,7 @@ import pmeig.spring.libraries.security.core.models.api.ApiRequest
 import pmeig.spring.libraries.security.core.models.api.ApiResponse
 
 @Component
-@ConditionalOnProperty(prefix = "spring.plugins.pmeig.security.auth.token", name = ["manager"], havingValue = "header")
+@ConditionalOnProperty(prefix = "spring.security.pmeig.auth.token", name = ["manager"], havingValue = "header")
 class TokenHeaderManager(private val properties: TokenHeaderProperties): TokenManager {
   override fun getToken(request: ApiRequest): String? {
     return request.headers[properties.name]?.firstOrNull()?.let { return it.removePrefix(properties.prefix) }

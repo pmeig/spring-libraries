@@ -1,14 +1,14 @@
 package pmeig.spring.libraries.logger.integration.configurer.log.mdc
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.core.context.SecurityContextHolder
 
 
 @Configuration
 @ConditionalOnClass(SecurityContextHolder::class)
-@ConditionalOnProperty(prefix = "spring.plugins.logger.mdc", name = ["user"], havingValue = "true")
+@ConditionalOnBooleanProperty(prefix = "spring.logger.pmeig.mdc", name = ["user"], havingValue = true)
 class SpringUserMDCConfigurer: MDCConfigurer {
   override fun configure(): Map<String, String> {
     val mdc = mutableMapOf<String, String>()

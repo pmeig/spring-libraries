@@ -1,11 +1,15 @@
 spring:
-  plugins:
-    pmeig:
-      logger:
-        correlation:
-          request: correlationId
   application:
     name: test
+  logger:
+    pmeig:
+      correlation:
+        request: correlationId
+  security:
+    pmeig:
+      auth:
+        type:
+          - jwt
 
 test:
   log: myLog

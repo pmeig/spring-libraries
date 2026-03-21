@@ -1,12 +1,15 @@
 package pmeig.spring.libraries.security.authentication.jwt
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.context.annotation.Configuration
 import pmeig.spring.libraries.security.ExpirationUpdater
 import pmeig.spring.libraries.security.authentication.jwt.model.KeyPair
 import java.time.Duration
 
-@ConfigurationProperties("spring.plugins.pmeig.security.auth.jwt")
-data class JwtProperties(
+@Suppress("unused")
+@Configuration
+@ConfigurationProperties("spring.security.pmeig.auth.jwt")
+class JwtProperties(
   var algorithm: JwtAlgorithm = JwtAlgorithm.ES256,
   override var exp: Duration = Duration.ofHours(4),
   var private: String = "",

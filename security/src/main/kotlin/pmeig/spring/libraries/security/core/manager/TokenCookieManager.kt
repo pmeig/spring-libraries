@@ -9,7 +9,7 @@ import pmeig.spring.libraries.security.core.models.api.ApiResponse
 import java.time.Duration
 
 @Component
-@ConditionalOnProperty(prefix = "spring.plugins.pmeig.security.auth.token", name = ["manager"], havingValue = "cookie", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "spring.security.pmeig.auth.token", name = ["manager"], havingValue = "cookie", matchIfMissing = true)
 class TokenCookieManager(private val properties: TokenCookieProperties): TokenManager {
 
   override fun getToken(request: ApiRequest): String? = request.cookies.find { it.name == properties.name }?.value

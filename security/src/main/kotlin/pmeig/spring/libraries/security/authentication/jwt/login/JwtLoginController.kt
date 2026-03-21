@@ -1,6 +1,6 @@
 package pmeig.spring.libraries.security.authentication.jwt.login
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type.SERVLET
 import org.springframework.http.ResponseEntity
@@ -19,7 +19,7 @@ import pmeig.spring.libraries.security.core.models.api.ServletAdapter
 @RestController
 @RequestMapping("/login")
 @ConditionalOnWebApplication(type = SERVLET)
-@ConditionalOnProperty(prefix = "spring.plugins.pmeig.security.auth", name = ["login"], havingValue = "true")
+@ConditionalOnBooleanProperty(prefix = "spring.security.pmeig.auth", name = ["login"], havingValue = true)
 class JwtLoginController(private val jwtService: JwtService,
                          private val tokenManager: TokenManager) {
   @PostMapping

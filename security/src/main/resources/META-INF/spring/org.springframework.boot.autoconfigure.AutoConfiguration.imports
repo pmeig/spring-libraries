@@ -1,1 +1,1 @@
-pmeig.spring.libraries.security.PmeigSecurityAutoConfiguration
+pmeig.spring.libraries.security.core.PmeigSecurityAutoConfiguration

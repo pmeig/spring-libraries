@@ -17,6 +17,7 @@ private val securityMethods = mapOf(Pair(true,
 @Configuration
 class SecurityAuthorizationConfiguration(
   private val authorizationProviders: List<SecurityAuthorizationProvider>
+
 ): SecurityHandler {
 
   override fun handle(http: HttpSecurity): HttpSecurity {

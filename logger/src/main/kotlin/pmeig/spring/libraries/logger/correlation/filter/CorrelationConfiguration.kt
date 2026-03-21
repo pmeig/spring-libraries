@@ -11,7 +11,7 @@ import pmeig.spring.libraries.logger.PmeigLoggerFactory
 import pmeig.spring.libraries.logger.correlation.CorrelationProperties
 import pmeig.spring.libraries.logger.correlation.correlationId
 import pmeig.spring.libraries.logger.correlation.insertCorrelationId
-import java.util.*
+import java.util.UUID
 
 
 @Configuration

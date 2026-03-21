@@ -1,8 +1,10 @@
 package pmeig.spring.libraries.security.core.crypto
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.context.annotation.Configuration
 
-@ConfigurationProperties("spring.plugins.pmeig.security.crypto")
+@Configuration
+@ConfigurationProperties("spring.security.pmeig.crypto")
 class CryptoProperties(
   secret: String = ""
 ) {

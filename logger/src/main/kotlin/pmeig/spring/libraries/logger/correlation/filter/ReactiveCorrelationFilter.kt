@@ -16,7 +16,8 @@ import reactor.core.CoreSubscriber
 import reactor.core.publisher.Hooks
 import reactor.core.publisher.Mono
 import reactor.core.publisher.Operators
-import java.util.*
+import reactor.util.context.Context
+import java.util.UUID
 
 @Configuration
 @ConditionalOnWebApplication(type = REACTIVE)
@@ -41,7 +42,7 @@ class ReactiveCorrelationFilter(private val correlationProperties: CorrelationPr
     logger.info("Request with correlation id {} received", correlationId)
     return chain.filter(
       exchange
-    )
+    ).contextWrite(Context.of(correlationProperties.request, correlationId))
       .doOnTerminate {
       Hooks.resetOnEachOperator(key)
     }
