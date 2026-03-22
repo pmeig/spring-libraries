@@ -22,7 +22,7 @@ class JwtCoreModule
 
 @ComponentScan(basePackageClasses = [SecurityCache::class])
 @ConditionalOnClass(CacheConfig::class)
-@ConditionalOnProperty(prefix = "spring.security.pmeig.auth", name = ["type"], havingValue = "cache", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "spring.security.pmeig.auth", name = ["type"], havingValue = "cache")
 class CacheModule
 
 

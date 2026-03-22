@@ -12,13 +12,16 @@ abstract class ExpirationUpdater(var type: String = ""): EnvironmentAware {
   open var exp: Duration = Duration.ofHours(4)
     set(value) {
       field = value
-      val authType = (environment?.getProperty("spring.security.pmeig.auth.type", LinkedList::class.java)?.first() ?: "cookie")
-      if (type == authType) expiration = value
+      actualizeExpiration(value)
     }
   override fun setEnvironment(environment: Environment) {
     this.environment = environment
-    environment.getProperty("spring.security.pmeig.auth.type", LinkedList::class.java)?.first()?.let {
-      if (type == it) expiration = exp
-    }
+    actualizeExpiration(this.exp)
+  }
+
+  private fun actualizeExpiration(exp: Duration) {
+    val authType = (environment?.getProperty("spring.security.pmeig.auth.type", LinkedList::class.java)
+      ?: listOf("cookie")).map { it.toString().lowercase() }
+    if (authType.any{ it == type }) expiration = exp
   }
 }

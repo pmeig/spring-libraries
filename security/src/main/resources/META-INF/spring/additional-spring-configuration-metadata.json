@@ -1,9 +1,0 @@
-{
-  "properties": [
-    {
-      "defaultValue": "jwt",
-      "name": "spring.security.pmeig.auth.type",
-      "type": "java.util.LinkedList<java.lang.String>"
-    }
-  ]
-}

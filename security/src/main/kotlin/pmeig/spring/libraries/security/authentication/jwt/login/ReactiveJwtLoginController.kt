@@ -1,6 +1,6 @@
 package pmeig.spring.libraries.security.authentication.jwt.login
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type.REACTIVE
 import org.springframework.http.server.reactive.ServerHttpRequest
@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono
 @RestController
 @RequestMapping("/login")
 @ConditionalOnWebApplication(type = REACTIVE)
-@ConditionalOnProperty(prefix = "spring.security.pmeig.auth", name = ["login"], havingValue = "jwt")
+@ConditionalOnBooleanProperty(prefix = "spring.security.pmeig.auth", name = ["login"], havingValue = true)
 class ReactiveJwtLoginController(private val jwtService: JwtService, private val tokenManager: TokenManager) {
   @PostMapping
   fun login(@RequestBody user: RequestUser): Mono<ServerResponse> {

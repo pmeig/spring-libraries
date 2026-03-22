@@ -28,7 +28,7 @@ class PmeigSecurityConfiguration {
 @Configuration
 @ConditionalOnWebApplication(type = REACTIVE)
 @EnableWebFluxSecurity
-@EnableReactiveMethodSecurity(useAuthorizationManager=true)
+@EnableReactiveMethodSecurity
 class PmeigReactiveAnnotation {
 
   @Bean

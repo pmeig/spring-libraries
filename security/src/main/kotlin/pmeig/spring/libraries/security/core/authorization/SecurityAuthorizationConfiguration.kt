@@ -5,6 +5,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.web.server.ServerHttpSecurity
 import pmeig.spring.libraries.security.core.SecurityHandler
 import pmeig.spring.libraries.security.core.annotation.PmeigSecurity
+import pmeig.spring.libraries.security.core.authorization.provider.SecurityAuthorizationProvider
 import pmeig.spring.libraries.security.core.models.SecurityAdapter
 import pmeig.spring.libraries.security.core.models.createSecurityAdapter
 
