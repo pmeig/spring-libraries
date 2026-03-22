@@ -30,7 +30,7 @@ class HazelcastConfiguration : BeanPostProcessor, ApplicationContextAware {
     hazelcastProperties: HazelcastConfigProperties
   ): Config {
     val config = Config()
-    config.clusterName = hazelcastProperties.cluster
+    hazelcastProperties.cluster?.let { config.clusterName = it }
     config.properties = hazelcastProperties.properties
     config.networkConfig = createNetworkConfig(hazelcastProperties)
     return config
@@ -42,7 +42,7 @@ class HazelcastConfiguration : BeanPostProcessor, ApplicationContextAware {
 
   @Bean
   @ConditionalOnMissingBean(HazelcastInstance::class)
-  fun hazelcastInstance(config: Config) = Hazelcast.newHazelcastInstance(config)
+  fun hazelcastInstance(config: Config): HazelcastInstance? = Hazelcast.newHazelcastInstance(config)
 
   override fun setApplicationContext(applicationContext: ApplicationContext) {
     this.applicationContext = applicationContext
