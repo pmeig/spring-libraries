@@ -14,8 +14,7 @@ annotation class EnablePmeigSecurity {
 
 //@AutoConfiguration
 @ConditionalOnBooleanProperty(prefix = "spring.plugins.pmeig", name = ["security"], havingValue = true, matchIfMissing = true)
-@ComponentScan(basePackageClasses = [PmeigSecurityAutoConfiguration::class],
-  excludeFilters = [ComponentScan.Filter(EnablePmeigSecurity::class)])
+@ComponentScan(basePackageClasses = [SecurityModule::class, JwtModule::class], excludeFilters = [ComponentScan.Filter(EnablePmeigSecurity::class)])
 class PmeigSecurityAutoConfiguration {
 }
 

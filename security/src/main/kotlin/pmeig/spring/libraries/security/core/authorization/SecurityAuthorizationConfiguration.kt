@@ -37,11 +37,12 @@ class SecurityAuthorizationConfiguration(
 
   private fun applySecurity(adapter: SecurityAdapter) {
     authorizationProviders.flatMap { it.get() }.forEach {
-      if (it.public) adapter.permitAll(it.path, it.methods)
-      else if (it.denied) adapter.denyAll(it.path, it.methods)
+      val paths = it.path.map { path -> if (path.startsWith("/")) path else "/$path" }
+      if (it.public) adapter.permitAll(paths, it.methods)
+      else if (it.denied) adapter.denyAll(paths, it.methods)
       else {
         securityMethods[it.contain]?.let { methods ->
-          methods[it.type]?.invoke(adapter, it.path, it.methods, it.features.toTypedArray())
+          methods[it.type]?.invoke(adapter, paths, it.methods, it.features.toTypedArray())
         }
       }
     }

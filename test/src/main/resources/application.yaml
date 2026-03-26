@@ -11,6 +11,10 @@ spring:
         type:
           - jwt
 
+springdoc:
+  swagger-ui:
+    path: swag.html
+
 test:
   log: myLog
 

@@ -11,7 +11,7 @@ class TestApplication {
 
 fun main(args: Array<String>) {
   runApplication<TestApplication>(*args) {
-//    setWebApplicationType(WebApplicationType.SERVLET)
-    setWebApplicationType(WebApplicationType.REACTIVE)
+    setWebApplicationType(WebApplicationType.SERVLET)
+//    setWebApplicationType(WebApplicationType.REACTIVE)
   }
 }
