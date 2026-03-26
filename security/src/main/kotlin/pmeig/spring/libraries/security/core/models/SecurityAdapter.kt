@@ -54,7 +54,12 @@ internal class ServletSecurityAdapter(private val configurer: AuthorizeHttpReque
     path: List<String>,
     methods: List<RequestMethod>,
     function: (AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl) -> Unit
-  ) = methods.forEach { method -> function(configurer.requestMatchers(method.asHttpMethod(), *path.toTypedArray())) }
+  ) {
+    if (methods.isEmpty()) {
+      return function(configurer.requestMatchers(*path.toTypedArray()))
+    }
+    methods.forEach { function(configurer.requestMatchers(it.asHttpMethod(), *path.toTypedArray())) }
+  }
 }
 
 internal class AuthorityReactiveAllAuthorizationManager(private val not: Boolean, vararg authorities: String) :
@@ -116,8 +121,12 @@ internal class ReactiveSecurityAdapter(private val configurer: ServerHttpSecurit
     path: List<String>,
     methods: List<RequestMethod>,
     function: (ServerHttpSecurity.AuthorizeExchangeSpec.Access) -> Unit
-  ) = methods.forEach { method -> function(configurer.pathMatchers(method.asHttpMethod(), *path.toTypedArray())) }
-
+  ) {
+    if (methods.isEmpty()) {
+      return function(configurer.pathMatchers(*path.toTypedArray()))
+    }
+    methods.forEach { function(configurer.pathMatchers(it.asHttpMethod(), *path.toTypedArray())) }
+  }
 }
 
 

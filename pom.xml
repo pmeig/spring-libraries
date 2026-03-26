@@ -26,6 +26,7 @@
         <module>logger</module>
         <module>cache</module>
         <module>security</module>
+        <module>swagger</module>
     </modules>
 
     <developers>
