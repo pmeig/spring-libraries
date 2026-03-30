@@ -2,6 +2,7 @@
 
 package pmeig.spring.libraries.test.controllers
 
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import pmeig.spring.libraries.cache.core.model.CacheConfig
 import pmeig.spring.libraries.cache.core.model.CacheConfigsProperties
+import pmeig.spring.libraries.error.web.WebException
 import pmeig.spring.libraries.logger.PmeigLoggerFactory
 import pmeig.spring.libraries.logger.correlation.correlationId
 
@@ -27,11 +29,7 @@ class TestController(
   @GetMapping("hello")
 //  @Public
   fun hello(): String {
-    try {
-      Thread.sleep(5000)
-    } catch (e: InterruptedException) {
-
-    }
+    throw WebException("10", "This is a test exception", HttpStatus.BAD_REQUEST)
     return createMessage("GET with correlation $correlationId")
 
 //    return Mono.delay(Duration.ofSeconds(1)).map {

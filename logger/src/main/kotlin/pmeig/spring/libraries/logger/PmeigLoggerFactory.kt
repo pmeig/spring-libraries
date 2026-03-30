@@ -29,7 +29,9 @@ private class PmeigLogger(private val delegate: Logger): InvocationHandler {
   }
 
   private fun sendLog(level: Level, args: Array<out Any?>) {
-    val allArguments = LinkedList(args.toList())
+    val allArguments = LinkedList(args.toList().flatMap {
+      if (it is Array<*>) it.toList() else if (it is Iterable<*>) it.toList() else listOf(it)
+    })
     var marker: Marker? = null
     var message = allArguments.poll()
     if (message is Marker) {
@@ -39,7 +41,7 @@ private class PmeigLogger(private val delegate: Logger): InvocationHandler {
     send(level, marker, message as? String, allArguments)
   }
   private fun send(level: Level, marker: Marker?, message: String?, args: LinkedList<Any?>) {
-    var throwable = args.pollLast()
+    var throwable = args.poll()
     if (null != throwable && throwable !is Throwable) {
       args.addLast(throwable)
       throwable = null
