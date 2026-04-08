@@ -1,0 +1,135 @@
+package pmeig.spring.libraries.jpa.data.bigquery.v2.mapper
+
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.google.cloud.bigquery.FieldValue
+import com.google.cloud.bigquery.QueryParameterValue
+import com.google.cloud.bigquery.StandardSQLTypeName
+import com.google.gson.JsonObject
+import org.springframework.util.ClassUtils
+import kotlin.reflect.KClass
+
+private fun arrayParameterConverter(value: Any?): QueryParameterValue? {
+  if (null == value) return null
+  var param: Array<*>? = if (ClassUtils.getUserClass(value).isArray) value as Array<*> else null
+  if (null == param) {
+    if (value is Collection<*>) {
+      param = value.toTypedArray()
+    } else if (value is Iterable<*>) {
+      param = value.toList().toTypedArray()
+    }
+  }
+  return param?.let {
+    val type = ClassUtils.getUserClass(it).componentType as Class<Any>
+    QueryParameterValue.array(it, type)
+  }
+}
+
+private class BigQueryJsonMapper(private val jsonMapper: ObjectMapper) : BigQueryMapper<Map<String, Any?>> {
+  override fun map(value: FieldValue?): Map<String, Any?>? =
+    value?.stringValue?.let { jsonMapper.convertValue(it, object : TypeReference<Map<String, Any?>>() {}) }
+
+  override fun parameter(value: Any?): QueryParameterValue? = if (value is JsonObject) QueryParameterValue.json(value)
+  else value?.let { QueryParameterValue.json(jsonMapper.writeValueAsString(it)) }
+}
+
+private abstract class BigQueryArrayMapper<T : MutableCollection<Any?>>(
+  private val itemMapper: BigQueryMapper<*>,
+  private val supplier: () -> T
+) : BigQueryMapper<T> {
+  override fun map(value: FieldValue?): T? {
+    val collection = supplier()
+    var isNull = true
+    value?.repeatedValue?.apply {
+      isNull = false
+      forEach {
+        itemMapper.map(if (it.isNull) null else it) ?.let { item -> collection.add(item) }
+      }
+    }
+    return if (isNull) null else collection
+  }
+
+  @Suppress("UNCHECKED_CAST")
+  override fun parameter(value: Any?): QueryParameterValue? = arrayParameterConverter(value)
+}
+
+private class BigQueryListMapper(itemMapper: BigQueryMapper<*>) :
+  BigQueryArrayMapper<MutableList<Any?>>(itemMapper, ::mutableListOf)
+private class BigQuerySetMapper(itemMapper: BigQueryMapper<*>) :
+  BigQueryArrayMapper<MutableSet<Any?>>(itemMapper, ::mutableSetOf)
+
+private class BigQueryTableMapper(private val itemMapper: BigQueryMapper<*>): BigQueryMapper<Array<Any?>> {
+  override fun map(value: FieldValue?): Array<Any?>? {
+    return value?.repeatedValue?.map { itemMapper.map(if(it.isNull) null else it) }?.toTypedArray()
+  }
+
+  override fun parameter(value: Any?): QueryParameterValue? = arrayParameterConverter(value)
+}
+
+private class BigQueryGeographyMapper() : BigQueryMapper<String> {
+  override fun map(value: FieldValue?): String? {
+    return value?.stringValue
+  }
+
+  override fun parameter(value: Any?): QueryParameterValue? = value?.let {
+    QueryParameterValue.geography(value.toString())
+  }
+}
+
+private class BigQueryStructMapper(private val mappers: Map<String, BigQueryMapper<*>>) : BigQueryMapper<Map<String, Any?>> {
+  override fun map(value: FieldValue?): Map<String, Any?>? {
+    return value?.recordValue?.let { struct ->
+      mappers.entries.associate { (key, mapper) -> key to mapper.map(struct.get(key).let {
+        if (it.isNull) null else it
+      }) }
+    }
+  }
+
+  override fun parameter(value: Any?): QueryParameterValue? = value?.let {
+    val type = ClassUtils.getUserClass(it)
+    QueryParameterValue.struct(mappers.entries.associate { (key, mapper) -> key to mapper.parameter(type.getField(key).get(value)) })
+  }
+}
+
+internal enum class BigQueryObjectMapper(private val type: StandardSQLTypeName,
+                                         private val target: KClass<*>,
+                                         factory: (ObjectMapper, BigQueryMapper<*>?, Map<String, BigQueryMapper<*>>) -> BigQueryMapper<*>) {
+  JSON(StandardSQLTypeName.JSON, Map::class, {
+    mapper, _, _ -> BigQueryJsonMapper(mapper)
+  }), LIST(StandardSQLTypeName.ARRAY, List::class, {
+    itemMapper: BigQueryMapper<*> -> BigQueryListMapper(itemMapper)
+  }), SET(StandardSQLTypeName.ARRAY, Set::class, {
+    itemMapper: BigQueryMapper<*> -> BigQuerySetMapper(itemMapper)
+  }), ARRAY(StandardSQLTypeName.ARRAY, Array::class, {
+    itemMapper: BigQueryMapper<*> -> BigQueryTableMapper(itemMapper)
+  }),
+  GEOGRAPHY(StandardSQLTypeName.GEOGRAPHY, String::class, { _, _, _ -> BigQueryGeographyMapper() }),
+  STRUCT(StandardSQLTypeName.STRUCT, Map::class, {
+    mappers: Map<String, BigQueryMapper<*>> -> BigQueryStructMapper(mappers)
+  });
+
+  companion object {
+    fun from(type: StandardSQLTypeName, target: KClass<*>? = null): BigQueryObjectMapper? {
+      return target?.let { clazz -> entries.find { it.type == type && it.target == clazz } } ?: entries.find { it.type == type }
+    }
+  }
+
+  var factory: (ObjectMapper, BigQueryMapper<*>?, Map<String, BigQueryMapper<*>>) -> BigQueryMapper<*> =
+    { _, _, _ -> error("Factory not initialized") }
+    private set
+  init {
+    this.factory = if (listOf(StandardSQLTypeName.JSON, StandardSQLTypeName.GEOGRAPHY).contains(type)){
+      val builder = factory
+      {mapper, itemMapper, struct ->
+        val mapper = builder(mapper, itemMapper, struct)
+        this.factory = { _, _, _ -> mapper }
+        mapper
+      }
+    } else factory
+  }
+
+  constructor(type: StandardSQLTypeName, target: KClass<*>,
+              factory: (BigQueryMapper<*>) -> BigQueryMapper<*>): this(type, target, { _, itemMapper, _ -> factory(itemMapper!!)})
+  constructor(type: StandardSQLTypeName, target: KClass<*>,
+              factory: (Map<String, BigQueryMapper<*>>) -> BigQueryMapper<*>): this(type, target, { _, _, struct -> factory(struct)})
+}

@@ -1,0 +1,7 @@
+package pmeig.spring.libraries.jpa.data.bigquery.mapper.factory
+
+import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryMapper
+
+interface BigQueryMapperProvider {
+  val mapper: BigQueryMapper<*>
+}
