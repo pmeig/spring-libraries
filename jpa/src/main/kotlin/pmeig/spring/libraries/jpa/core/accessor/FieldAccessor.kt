@@ -5,6 +5,7 @@ import java.lang.reflect.Method
 import java.lang.reflect.Type
 
 interface FieldAccessor<T>: FieldGetter<T>, FieldSetter<T> {
+  val struct: Map<String, FieldAccessor<*>>
 }
 
 interface FieldSetter<T> {
@@ -54,7 +55,7 @@ internal class MethodSetter<T>(field: Field): FieldSetter<T> {
 }
 
 @Suppress("UNCHECKED_CAST")
-open class FieldAccessorWrapper<T>(field: Field): FieldAccessor<T> {
+open class FieldAccessorWrapper<T>(field: Field, override val struct: Map<String, FieldAccessor<*>> = mapOf()): FieldAccessor<T> {
   override val declared: Class<*> = field.declaringClass
   override val java: Class<T> = field.type as Class<T>
   override val type: Type = field.genericType
@@ -71,7 +72,8 @@ open class FieldAccessorWrapper<T>(field: Field): FieldAccessor<T> {
 }
 
 @Suppress("UNCHECKED_CAST")
-class ParentFieldAccessor<T>(current: Field, private val parent: FieldAccessor<*>): FieldAccessorWrapper<T>(current) {
+class ParentFieldAccessor<T>(current: Field, private val parent: FieldAccessor<*>):
+  FieldAccessorWrapper<T>(current) {
   override fun get(entity: Any?): T? = getParent(entity)?.let { super.get(it) }
   override fun set(entity: Any?, value: T?){
     getParent(entity)?.let { super.set(it, value) }

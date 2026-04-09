@@ -11,13 +11,10 @@ import org.springframework.util.ClassUtils
 import pmeig.spring.libraries.jpa.core.accessor.FieldAccessor
 import pmeig.spring.libraries.jpa.core.accessor.FieldAccessorWrapper
 import pmeig.spring.libraries.jpa.core.accessor.ParentFieldAccessor
+import pmeig.spring.libraries.jpa.core.annotation.Struct
 import pmeig.spring.libraries.jpa.core.entity.model.DataMetadata
 import pmeig.spring.libraries.jpa.core.entity.model.DataPrimaryMetadata
-import pmeig.spring.libraries.jpa.data.bigquery.converter.entity.BigQueryField
-import pmeig.spring.libraries.jpa.data.bigquery.converter.entity.FieldWrapper
-import pmeig.spring.libraries.jpa.data.bigquery.converter.entity.SubField
-import pmeig.spring.libraries.jpa.data.bigquery.converter.entity.model.BigQueryPrimaryKey
-import pmeig.spring.libraries.jpa.data.bigquery.converter.entity.model.BigQuerySQLMetadata
+import java.lang.reflect.Field
 import java.util.regex.Pattern
 import kotlin.reflect.KClass
 
@@ -72,25 +69,41 @@ class EntityAnnotationReader {
     return type.declaredFields.flatMap { field ->
       val columnName =
         AnnotatedElementUtils.getMergedAnnotation(field, Column::class.java)?.name ?: toSnakeCase(field.name)
+      var struct: Map<String, FieldAccessor<*>> = emptyMap()
       val isEmbedded = AnnotatedElementUtils.hasAnnotation(field, EmbeddedId::class.java)
       if (isEmbedded || AnnotatedElementUtils.hasAnnotation(field, Id::class.java)) {
-        val embeddedColumns = if (isEmbedded) extractColumns(field.type).first else mapOf(
-          columnName to FieldAccessorWrapper<Any>(field)
-        )
-        dataPrimaryMetadata = DataPrimaryMetadata(
-          field, embeddedColumns, isEmbedded
-        )
-        if (isEmbedded) return@flatMap embeddedColumns.map {
-          Pair(
-            it.key,
-            ParentFieldAccessor(field, it.value)
-          )
+        val (embeddedColumns, partDataPrimaryMetadata) = extractPartId(field, columnName, isEmbedded)
+        dataPrimaryMetadata = partDataPrimaryMetadata ?: dataPrimaryMetadata
+        if (embeddedColumns.isNotEmpty()) return@flatMap embeddedColumns
+      } else if(AnnotatedElementUtils.hasAnnotation(field, Struct::class.java)) {
+        struct = extractColumns(field.type).first.mapValues {
+          ParentFieldAccessor<Any>(field, it.value)
         }
       }
-      listOf(Pair(columnName, FieldAccessorWrapper<Any>(field)))
+      listOf(Pair(columnName, FieldAccessorWrapper(field, struct)))
     }.let {
       Pair(it.toMap() + parentMetadata.first, dataPrimaryMetadata ?: parentMetadata.second)
     }
+  }
+
+  private fun extractPartId(
+    field: Field,
+    columnName: String,
+    isEmbedded: Boolean
+  ): Pair<List<Pair<String, FieldAccessorWrapper<Any>>>, DataPrimaryMetadata?> {
+      val embeddedColumns = if (isEmbedded) extractColumns(field.type).first else mapOf(
+        columnName to FieldAccessorWrapper<Any>(field)
+      )
+      val dataPrimaryMetadata = DataPrimaryMetadata(
+        field, embeddedColumns, isEmbedded
+      )
+      if (isEmbedded) return Pair(embeddedColumns.map {
+        Pair(
+          it.key,
+          ParentFieldAccessor(field, it.value)
+        )
+      }, dataPrimaryMetadata)
+    return Pair(listOf(), null)
   }
 
   private fun toSnakeCase(text: String): String {

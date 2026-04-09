@@ -3,7 +3,6 @@ package pmeig.spring.libraries.jpa.data.bigquery.mapper
 import com.google.cloud.bigquery.FieldValue
 import com.google.cloud.bigquery.QueryParameterValue
 import com.google.cloud.bigquery.StandardSQLTypeName
-import org.springframework.util.ClassUtils
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperProvider
 import java.lang.reflect.Type
 import java.math.BigDecimal

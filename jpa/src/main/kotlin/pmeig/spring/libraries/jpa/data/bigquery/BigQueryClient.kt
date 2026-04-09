@@ -1,4 +1,4 @@
-package pmeig.spring.libraries.jpa.data.bigquery.v2
+package pmeig.spring.libraries.jpa.data.bigquery
 
 import com.google.cloud.bigquery.BigQuery
 import com.google.cloud.bigquery.JobId
@@ -8,10 +8,12 @@ import com.google.cloud.bigquery.TableResult
 import org.slf4j.LoggerFactory.getLogger
 import org.springframework.stereotype.Component
 import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
-import pmeig.spring.libraries.jpa.data.bigquery.v2.mapper.factory.BigQueryMapperFactory
+import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperFactory
+import kotlin.reflect.KClass
 
 private val logger = getLogger(BigQueryClient::class.java)
 
+@Suppress("unused")
 @Component
 class BigQueryClient(
   private val bigQuery: BigQuery,
@@ -35,6 +37,16 @@ class BigQueryClient(
     return bigQuery.query(configurator(QueryJobConfiguration.newBuilder(sql)).build(), jobId.setRandomJob().build())
   }
 
+  fun <T: Any> tryEntity(entityRef: Class<T>, sql: String, configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }) =
+    tryEntity(entityRef.kotlin, sql, configurator)
+  fun <T : Any> tryEntity(entityRef: KClass<T>, sql: String, configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }) =
+    tryEntities(entityRef, sql, configurator).firstOrNull()
+
+  fun <T: Any> entity(entityRef: Class<T>, sql: String, configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }) =
+    entity(entityRef.kotlin, sql, configurator)
+  fun <T : Any> entity(entityRef: KClass<T>, sql: String, configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }) =
+    entities(entityRef, sql, configurator).firstOrNull()
+
   fun tryJson(sql: String, configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }): String? {
     return toJson(sql) { tryQuery(it, configurator) }
   }
@@ -43,12 +55,11 @@ class BigQueryClient(
     return toJson(sql) { query(it, configurator) }
   }
 
-  fun tryRecord(sql: String, configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = {it}): Map<String, Any?> = recorded {
-    tryQuery(sql, configurator)
-  }?.firstOrNull() ?: emptyMap()
+  fun tryRecord(sql: String, configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = {it}): Map<String, Any?> =
+    tryRecords(sql, configurator).firstOrNull() ?: emptyMap()
 
   fun record(sql: String, configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = {it}): Map<String, Any?>
-  = recorded { query(sql, configurator) }?.firstOrNull() ?: emptyMap()
+  = records(sql, configurator).firstOrNull() ?: emptyMap()
 
   private fun toJson(sql: String, executor: (sql: String) -> TableResult?): String? {
     val toJsonQuery = "WITH request AS ($sql) " +
