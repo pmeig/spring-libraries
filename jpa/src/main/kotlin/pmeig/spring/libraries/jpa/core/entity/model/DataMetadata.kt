@@ -1,6 +1,6 @@
 package pmeig.spring.libraries.jpa.core.entity.model
 
-import pmeig.spring.libraries.jpa.core.accessor.FieldAccessor
+import pmeig.spring.libraries.jpa.core.FieldAccessor
 
 data class DataMetadata(
   val table: String,

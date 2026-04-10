@@ -1,4 +1,4 @@
-package pmeig.spring.libraries.jpa.core.accessor
+package pmeig.spring.libraries.jpa.core
 
 import java.lang.reflect.Field
 import java.lang.reflect.Method
@@ -55,7 +55,8 @@ internal class MethodSetter<T>(field: Field): FieldSetter<T> {
 }
 
 @Suppress("UNCHECKED_CAST")
-open class FieldAccessorWrapper<T>(field: Field, override val struct: Map<String, FieldAccessor<*>> = mapOf()): FieldAccessor<T> {
+open class FieldAccessorWrapper<T>(field: Field,
+                                   override val struct: Map<String, FieldAccessor<*>> = emptyMap()): FieldAccessor<T> {
   override val declared: Class<*> = field.declaringClass
   override val java: Class<T> = field.type as Class<T>
   override val type: Type = field.genericType
@@ -69,22 +70,27 @@ open class FieldAccessorWrapper<T>(field: Field, override val struct: Map<String
   }
   override fun get(entity: Any?): T? = getter(entity)
   override fun set(entity: Any?, value: T?) = setter(entity, value)
+  override fun toString(): String {
+    return "FieldAccessorWrapper(struct=$struct, declared=$declared, java=$java, type=$type)"
+  }
+
+
 }
 
 @Suppress("UNCHECKED_CAST")
-class ParentFieldAccessor<T>(current: Field, private val parent: FieldAccessor<*>):
-  FieldAccessorWrapper<T>(current) {
-  override fun get(entity: Any?): T? = getParent(entity)?.let { super.get(it) }
+class ParentFieldAccessor<T>(private val parent: Field, private val child: FieldAccessor<T>, struct: Map<String, FieldAccessor<*>> = emptyMap()):
+  FieldAccessorWrapper<T>(parent, struct) {
+  override fun get(entity: Any?): T? = getParent(entity)?.let { child.get(it) }
   override fun set(entity: Any?, value: T?){
-    getParent(entity)?.let { super.set(it, value) }
+    getParent(entity)?.let { child.set(it, value) }
   }
 
   private fun getParent(entity: Any?): Any? {
     return entity?.let {
-      var parentValue = parent.get(entity)
+      var parentValue = super.get(it) as Any?
       if (null == parentValue) {
-        parentValue = parent.declared.declaredConstructors.find { it.parameterCount == 0 }?.newInstance()?.apply {
-          parent.set(entity, parentValue)
+        parentValue = parent.type.declaredConstructors.find { constructor -> constructor.parameterCount == 0 }?.newInstance()?.apply {
+          super.set(entity, parentValue)
         }
       }
       parentValue

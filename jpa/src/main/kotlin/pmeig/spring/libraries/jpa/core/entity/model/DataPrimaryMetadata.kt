@@ -1,7 +1,6 @@
 package pmeig.spring.libraries.jpa.core.entity.model
 
-import pmeig.spring.libraries.jpa.core.accessor.FieldAccessor
-import pmeig.spring.libraries.jpa.data.bigquery.converter.entity.BigQueryField
+import pmeig.spring.libraries.jpa.core.FieldAccessor
 import java.lang.reflect.Field
 
 data class DataPrimaryMetadata(
@@ -9,7 +8,5 @@ data class DataPrimaryMetadata(
   val columns: Map<String, FieldAccessor<*>> = emptyMap(),
   val embedded: Boolean = false
 ) {
-  val columnNames: Set<String> get() = columns.keys
-
   fun get(entity: Any?, column: String) = columns[column]?.get(entity)
 }

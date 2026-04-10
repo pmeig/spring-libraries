@@ -2,7 +2,7 @@ package pmeig.spring.libraries.jpa.data.bigquery
 
 import com.google.cloud.bigquery.QueryJobConfiguration
 import com.google.cloud.bigquery.TableResult
-import pmeig.spring.libraries.jpa.core.accessor.FieldAccessor
+import pmeig.spring.libraries.jpa.core.FieldAccessor
 import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
 import pmeig.spring.libraries.jpa.data.bigquery.cache.BigQueryEntityCache
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryFieldMapper

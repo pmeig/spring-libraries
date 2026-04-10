@@ -1,4 +1,4 @@
-package pmeig.spring.libraries.jpa.configuration
+package pmeig.spring.libraries.jpa
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean

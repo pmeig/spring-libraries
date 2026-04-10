@@ -5,7 +5,7 @@ import com.google.cloud.bigquery.Field
 import com.google.cloud.bigquery.Schema
 import com.google.cloud.bigquery.StandardSQLTypeName
 import org.springframework.stereotype.Component
-import pmeig.spring.libraries.jpa.core.accessor.FieldAccessor
+import pmeig.spring.libraries.jpa.core.FieldAccessor
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryDate
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryObjectMapper

@@ -10,6 +10,7 @@ import org.springframework.util.ClassUtils
 import java.lang.reflect.Type
 import kotlin.reflect.KClass
 
+@Suppress("UNCHECKED_CAST")
 private fun arrayParameterConverter(value: Any?): QueryParameterValue? {
   if (null == value) return null
   var param: Array<*>? = if (ClassUtils.getUserClass(value).isArray) value as Array<*> else null
@@ -105,9 +106,9 @@ internal enum class BigQueryObjectMapper(private val type: StandardSQLTypeName,
     itemMapper: BigQueryMapper<*> -> BigQueryTableMapper(itemMapper)
   }),
   GEOGRAPHY(StandardSQLTypeName.GEOGRAPHY, String::class.javaObjectType, { _, _, _ -> BigQueryGeographyMapper() }),
-  STRUCT(StandardSQLTypeName.STRUCT, Map::class, {
-    mappers: Map<String, BigQueryMapper<*>> -> BigQueryStructMapper(mappers)
-  });
+  STRUCT(StandardSQLTypeName.STRUCT, {
+      mappers: Map<String, BigQueryMapper<*>> -> BigQueryStructMapper(mappers)
+  }, Map::class);
 
   companion object {
     fun from(type: StandardSQLTypeName, target: Type? = null): BigQueryObjectMapper? {
@@ -132,6 +133,7 @@ internal enum class BigQueryObjectMapper(private val type: StandardSQLTypeName,
 
   constructor(type: StandardSQLTypeName, target: KClass<*>,
               factory: (BigQueryMapper<*>) -> BigQueryMapper<*>): this(type, target.javaObjectType, { _, itemMapper, _ -> factory(itemMapper!!)})
-  constructor(type: StandardSQLTypeName, target: KClass<*>,
-              factory: (Map<String, BigQueryMapper<*>>) -> BigQueryMapper<*>): this(type, target.javaObjectType, { _, _, struct -> factory(struct)})
+  constructor(type: StandardSQLTypeName,
+              factory: (Map<String, BigQueryMapper<*>>) -> BigQueryMapper<*>, target: KClass<*>
+              ): this(type, target.javaObjectType, { _, _, struct -> factory(struct)})
 }
