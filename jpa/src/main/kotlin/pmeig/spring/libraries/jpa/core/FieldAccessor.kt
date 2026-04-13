@@ -74,6 +74,28 @@ open class FieldAccessorWrapper<T>(field: Field,
     return "FieldAccessorWrapper(struct=$struct, declared=$declared, java=$java, type=$type)"
   }
 
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as FieldAccessorWrapper<*>
+
+    if (struct != other.struct) return false
+    if (declared != other.declared) return false
+    if (java != other.java) return false
+    if (type != other.type) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = struct.hashCode()
+    result = 31 * result + declared.hashCode()
+    result = 31 * result + java.hashCode()
+    result = 31 * result + type.hashCode()
+    return result
+  }
+
 
 }
 
@@ -96,4 +118,26 @@ class ParentFieldAccessor<T>(private val parent: Field, private val child: Field
       parentValue
     }
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+    if (!super.equals(other)) return false
+
+    other as ParentFieldAccessor<*>
+
+    if (parent != other.parent) return false
+    if (child != other.child) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = super.hashCode()
+    result = 31 * result + parent.hashCode()
+    result = 31 * result + child.hashCode()
+    return result
+  }
+
+
 }

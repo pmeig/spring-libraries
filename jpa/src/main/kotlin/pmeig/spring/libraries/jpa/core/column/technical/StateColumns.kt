@@ -19,4 +19,22 @@ abstract class StateColumns(
   var created: LocalDateTime? = null,
   updatedBy: String? = null,
   updated: LocalDateTime? = null
-): UpdatedColumns(updatedBy, updated)
+): UpdatedColumns(updatedBy, updated) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as StateColumns
+
+    if (createdBy != other.createdBy) return false
+    if (created != other.created) return false
+
+    return super.equals(other)
+  }
+
+  override fun hashCode(): Int {
+    var result = createdBy?.hashCode() ?: 0
+    result = 31 * result + (created?.hashCode() ?: 0)
+    return super.hashCode() + result
+  }
+}

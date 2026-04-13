@@ -15,4 +15,6 @@ abstract class AutoIdEnabledCreatedColumns(
   enabled: Boolean = false,
   createdBy: String? = null,
   created: LocalDateTime? = null
-): EnabledCreatedColumns(enabled, createdBy, created)
+): EnabledCreatedColumns(enabled, createdBy, created) {
+
+}

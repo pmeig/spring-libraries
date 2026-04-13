@@ -17,4 +17,20 @@ abstract class AutoIdEnabledStateColumns(
   created: LocalDateTime? = null,
   updatedBy: String? = null,
   updated: LocalDateTime? = null
-): EnabledStateColumns(enabled, createdBy, created, updatedBy, updated)
+): EnabledStateColumns(enabled, createdBy, created, updatedBy, updated) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+    if (!super.equals(other)) return false
+
+    other as AutoIdEnabledStateColumns
+
+    return id == other.id
+  }
+
+  override fun hashCode(): Int {
+    var result = super.hashCode()
+    result = 31 * result + (id?.hashCode() ?: 0)
+    return result
+  }
+}

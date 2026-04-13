@@ -16,4 +16,20 @@ abstract class UUIDEnabledCreatedColumns(
   enabled: Boolean = false,
   createdBy: String? = null,
   created: LocalDateTime? = null
-): EnabledCreatedColumns(enabled, createdBy, created)
+): EnabledCreatedColumns(enabled, createdBy, created) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+    if (!super.equals(other)) return false
+
+    other as UUIDEnabledCreatedColumns
+
+    return id == other.id
+  }
+
+  override fun hashCode(): Int {
+    var result = super.hashCode()
+    result = 31 * result + (id?.hashCode() ?: 0)
+    return result
+  }
+}
