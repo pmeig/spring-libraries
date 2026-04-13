@@ -1,4 +1,4 @@
-package pmeig.spring.libraries.jpa.core.model
+package pmeig.spring.libraries.jpa.shared.model
 
 class StructColumn(
   var name : String? = null,

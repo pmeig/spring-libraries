@@ -1,4 +1,4 @@
-package pmeig.spring.libraries.jpa.core.model
+package pmeig.spring.libraries.jpa.shared.model
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -16,7 +16,8 @@ class EntityTest(
   updated: LocalDateTime? = null,
   @Struct
   var struct: StructColumn? = null,
-  @Column(name = "secret_name")
+  @Column(name = "secret")
   var secretName: String? = null,
+  var array: List<String>? = null
 ): AutoIdStateColumns(id, createdBy, created, updatedBy, updated) {
 }

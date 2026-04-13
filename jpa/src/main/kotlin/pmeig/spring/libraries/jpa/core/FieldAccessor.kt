@@ -107,6 +107,10 @@ class ParentFieldAccessor<T>(private val parent: Field, private val child: Field
     getParent(entity)?.let { child.set(it, value) }
   }
 
+  override val declared: Class<*> = child.declared
+  override val java: Class<T> = child.java
+  override val type: Type = child.type
+
   private fun getParent(entity: Any?): Any? {
     return entity?.let {
       var parentValue = super.get(it) as Any?

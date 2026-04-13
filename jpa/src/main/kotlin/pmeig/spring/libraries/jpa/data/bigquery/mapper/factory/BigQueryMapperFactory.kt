@@ -79,7 +79,7 @@ class BigQueryMapperFactory(
         toStructMetadata(value.struct)
       )
     else
-      BigQueryMetadataFactory(value.type)
+      toMetadataFactory(value.type)
 
   private fun toStructMetadata(structFields: Map<String, FieldAccessor<*>>) =
     BigQueryStructType(structFields.mapValues { toMetadataFactory(it.value) })

@@ -64,7 +64,7 @@ class EntityAnnotationReader {
     type: Class<*>
   ): Pair<Map<String, FieldAccessor<*>>, DataPrimaryMetadata?> {
     if (type == Any::class.java) return Pair(emptyMap(), DataPrimaryMetadata())
-    if (!AnnotatedElementUtils.hasAnnotation(type, MappedSuperclass::class.java)) return extractColumns(
+    if (listOf(MappedSuperclass::class.java, Entity::class.java).none { AnnotatedElementUtils.hasAnnotation(type, it) }) return extractColumns(
       type.superclass
     )
     val parentMetadata = extractColumns(type.superclass)
