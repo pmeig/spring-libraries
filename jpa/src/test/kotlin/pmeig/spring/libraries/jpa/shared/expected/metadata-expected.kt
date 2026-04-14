@@ -1,13 +1,11 @@
 package pmeig.spring.libraries.jpa.shared.expected
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import pmeig.spring.libraries.jpa.core.FieldAccessor
 import pmeig.spring.libraries.jpa.core.FieldAccessorWrapper
 import pmeig.spring.libraries.jpa.core.ParentFieldAccessor
 import pmeig.spring.libraries.jpa.core.column.id.auto.AutoIdStateColumns
 import pmeig.spring.libraries.jpa.core.entity.model.DataMetadata
 import pmeig.spring.libraries.jpa.core.entity.model.DataPrimaryMetadata
-import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryObjectMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMetadataFactory
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryStructType
 import pmeig.spring.libraries.jpa.shared.model.EntityTest
@@ -28,8 +26,8 @@ fun entityTestMetadata_expected() = getCache(ENTITY_TEST_METADATA) {
   )
 }
 
-fun arrayMetadataFactory_expected(jsonMapper: ObjectMapper): BigQueryMetadataFactory = getCache(ARRAY_METADATA_FACTORY) {
-  BigQueryObjectMapper.ARRAY.factory(jsonMapper)
+fun arrayMetadataFactory_expected(): BigQueryMetadataFactory = getCache(ARRAY_METADATA_FACTORY) {
+  BigQueryMetadataFactory(List::class.java, String::class.java)
 }
 
 fun generateEntityTestColumn(clazz: Class<EntityTest>): Map<String, FieldAccessor<*>> {

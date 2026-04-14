@@ -92,8 +92,10 @@ private abstract class BigQueryRangeMapper<T : Any>(
     return value?.let {
       it as? Pair<*, *>
     }?.let {
-      QueryParameterValue.range(Range.newBuilder().setStart(timeMapper.parameter(it.first)!!.value)
-        .setEnd(timeMapper.parameter(it.second)!!.value).build())
+      QueryParameterValue.range(
+        Range.newBuilder().setStart(timeMapper.parameter(it.first)!!.value)
+          .setEnd(timeMapper.parameter(it.second)!!.value).build()
+      )
     }
   }
 }
@@ -105,13 +107,17 @@ private class BigQueryRangeTimestampMapper : BigQueryRangeMapper<Long>(BigQueryT
 
 internal enum class BigQueryDate(
   private val types: Collection<StandardSQLTypeName>,
-  private val target: Type,
+  targets: List<Type>,
   override val mapper: BigQueryMapper<*>
-): BigQueryMapperProvider {
+) : BigQueryMapperProvider {
   DATE(StandardSQLTypeName.DATE, LocalDate::class, BigQueryDateMapper()),
   TIMESTAMP(StandardSQLTypeName.TIMESTAMP, Long::class, BigQueryTimestampMapper()),
   TIME(StandardSQLTypeName.TIME, LocalTime::class, BigQueryTimeMapper()),
-  DATETIME(listOf(StandardSQLTypeName.DATETIME, StandardSQLTypeName.TIMESTAMP), LocalDateTime::class.javaObjectType, BigQueryDateTimeMapper()),
+  DATETIME(
+    listOf(StandardSQLTypeName.DATETIME, StandardSQLTypeName.TIMESTAMP),
+    listOf(LocalDateTime::class.javaObjectType),
+    BigQueryDateTimeMapper()
+  ),
   INSTANT(StandardSQLTypeName.TIMESTAMP, Instant::class, BigQueryInstantMapper()),
   PERIOD(StandardSQLTypeName.INTERVAL, Period::class, BigQueryPeriodMapper()),
   DURATION(StandardSQLTypeName.INTERVAL, Duration::class, BigQueryDurationMapper()),
@@ -120,12 +126,19 @@ internal enum class BigQueryDate(
   RANGE_DATE(StandardSQLTypeName.RANGE, LocalDate::class, BigQueryRangeDateMapper()),
   RANGE_INSTANT(StandardSQLTypeName.RANGE, Instant::class, BigQueryRangeInstantMapper());
 
-  constructor(type: StandardSQLTypeName, target: KClass<*>, mapper: BigQueryMapper<*>): this(listOf(type), target.javaObjectType, mapper)
+  private val targets = targets.map { it.typeName }
+
+  constructor(type: StandardSQLTypeName, target: KClass<*>, mapper: BigQueryMapper<*>) : this(
+    listOf(type),
+    listOfNotNull(target.javaObjectType, target.javaPrimitiveType),
+    mapper
+  )
 
 
   companion object {
+    fun from(type: StandardSQLTypeName, target: KClass<*>): BigQueryDate? = from(type, target.javaObjectType)
     fun from(type: StandardSQLTypeName, target: Type? = null): BigQueryDate? {
-      return target?.let { clazz -> entries.find { it.types.contains(type) && it.target.typeName == clazz.typeName } }
+      return target?.let { clazz -> entries.find { it.types.contains(type) && clazz.typeName in it.targets } }
         ?: entries.find { it.types.contains(type) }
     }
   }

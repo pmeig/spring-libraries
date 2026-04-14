@@ -23,11 +23,16 @@ private class BigQueryStringMapper : BigQueryMapper<String> {
   override fun parameter(value: Any?): QueryParameterValue? = value?.let { QueryParameterValue.string(value.toString()) }
 }
 
-private class BigQueryLongMapper : BigQueryMapper<Long> {
-  override fun map(value: FieldValue?): Long? = value?.longValue
-
+private abstract class BigQueryNumberMapper<T>(
+  private val mapper: (Long) -> T
+) : BigQueryMapper<T> {
+  override fun map(value: FieldValue?): T? = value?.longValue?.let { mapper(it) }
   override fun parameter(value: Any?): QueryParameterValue? = convertToNumber(value, String::toLong)?.let { QueryParameterValue.int64(it) }
 }
+
+private class BigQueryLongMapper : BigQueryNumberMapper<Long>( { it })
+private class BigQueryIntMapper : BigQueryNumberMapper<Int>( { it.toInt() })
+private class BigQueryShortMapper : BigQueryNumberMapper<Short>( { it.toShort() })
 
 private class BigQueryDoubleMapper : BigQueryMapper<Double> {
   override fun map(value: FieldValue?): Double? = value?.doubleValue
@@ -65,11 +70,14 @@ private class BigQueryByteArrayMapper: BigQueryMapper<ByteArray> {
   }?.let { QueryParameterValue.bytes(it) }
 }
 
+@Suppress("unused")
 internal enum class BigQueryPrimitive(private val type: StandardSQLTypeName,
-                                     private val target: Type,
-                                     override val mapper: BigQueryMapper<*>): BigQueryMapperProvider {
+                                      target: List<Type>,
+                                      override val mapper: BigQueryMapper<*>): BigQueryMapperProvider {
   STRING(StandardSQLTypeName.STRING, String::class, BigQueryStringMapper()),
   INT64(StandardSQLTypeName.INT64, Long::class, BigQueryLongMapper()),
+  INT64_INTEGER(StandardSQLTypeName.INT64, Int::class, BigQueryIntMapper()),
+  INT64_SHORT(StandardSQLTypeName.INT64, Short::class, BigQueryShortMapper()),
   FLOAT64(StandardSQLTypeName.FLOAT64, Double::class, BigQueryDoubleMapper()),
   BOOL(StandardSQLTypeName.BOOL, Boolean::class, BigQueryBooleanMapper()),
   BYTES(StandardSQLTypeName.BYTES, ByteArray::class, BigQueryByteArrayMapper()),
@@ -77,10 +85,15 @@ internal enum class BigQueryPrimitive(private val type: StandardSQLTypeName,
   NUMERIC(StandardSQLTypeName.NUMERIC, BigInteger::class, BigQueryBigDecimal());
 
   companion object {
+    fun from(type: StandardSQLTypeName, target: KClass<*>): BigQueryPrimitive? = from(type, target.javaObjectType)
     fun from(type: StandardSQLTypeName, target: Type? = null): BigQueryPrimitive? =
-      target?.let { clazz -> entries.find { it.type == type && it.target.typeName == clazz.typeName } } ?: entries.find { it.type == type }
+      target?.let { clazz -> entries.find { it.type == type && clazz.typeName in it.targets } } ?: entries.find { it.type == type }
   }
 
-  constructor(type: StandardSQLTypeName, target: KClass<*>, mapper: BigQueryMapper<*>): this(type, target.javaObjectType, mapper)
+  private val targets = target.map { it.typeName }
+
+  constructor(type: StandardSQLTypeName, target: KClass<*>, mapper: BigQueryMapper<*>): this(type,
+    listOfNotNull(target.javaObjectType, target.javaPrimitiveType), mapper)
+  constructor(type: StandardSQLTypeName, target: Class<*>, mapper: BigQueryMapper<*>): this(type, listOf(target), mapper)
 }
 

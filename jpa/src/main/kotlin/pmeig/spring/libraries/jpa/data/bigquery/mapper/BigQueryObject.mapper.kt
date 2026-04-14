@@ -53,6 +53,20 @@ private abstract class BigQueryArrayMapper<T : MutableCollection<Any?>>(
 
   @Suppress("UNCHECKED_CAST")
   override fun parameter(value: Any?): QueryParameterValue? = arrayParameterConverter(value)
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as BigQueryArrayMapper<*>
+
+    return itemMapper == other.itemMapper
+  }
+
+  override fun hashCode(): Int {
+    return itemMapper.hashCode()
+  }
+
+
 }
 
 private class BigQueryListMapper(itemMapper: BigQueryMapper<*>) :
@@ -76,6 +90,18 @@ private class BigQueryGeographyMapper() : BigQueryMapper<String> {
   override fun parameter(value: Any?): QueryParameterValue? = value?.let {
     QueryParameterValue.geography(value.toString())
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+    return true
+  }
+
+  override fun hashCode(): Int {
+    return javaClass.hashCode()
+  }
+
+
 }
 
 private class BigQueryStructMapper(private val mappers: Map<String, BigQueryMapper<*>>) : BigQueryMapper<Map<String, Any?>> {
@@ -91,6 +117,21 @@ private class BigQueryStructMapper(private val mappers: Map<String, BigQueryMapp
     val type = ClassUtils.getUserClass(it)
     QueryParameterValue.struct(mappers.entries.associate { (key, mapper) -> key to mapper.parameter(type.getField(key).get(value)) })
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as BigQueryStructMapper
+
+    return mappers == other.mappers
+  }
+
+  override fun hashCode(): Int {
+    return mappers.hashCode()
+  }
+
+
 }
 
 internal enum class BigQueryObjectMapper(private val type: StandardSQLTypeName,
@@ -111,6 +152,7 @@ internal enum class BigQueryObjectMapper(private val type: StandardSQLTypeName,
   }, Map::class);
 
   companion object {
+    fun from(type: StandardSQLTypeName, target: KClass<*>): BigQueryObjectMapper? = from(type, target.javaObjectType)
     fun from(type: StandardSQLTypeName, target: Type? = null): BigQueryObjectMapper? {
       return target?.let { clazz -> entries.find { it.type == type && it.target.typeName == clazz.typeName } }
         ?: entries.find { it.type == type }

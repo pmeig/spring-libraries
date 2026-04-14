@@ -21,23 +21,11 @@ class BigQueryMapperFactory(
   fun factory(field: Field, metadata: BigQueryMetadataFactory = BigQueryMetadataFactory()): BigQueryMapper<*> {
     val type = field.type.standardType
     if (field.mode == Field.Mode.REPEATED) {
-      val valueMapper = provideNoBigQueryObjectMapper(type, metadata.subType)!!
+      val valueMapper = factoryWithoutArray(field, type, metadata, { it.subType })
       return BigQueryObjectMapper.from(StandardSQLTypeName.ARRAY, metadata.type)!!
         .factory(jsonMapper, valueMapper, mapOf())
     }
-    if (type == StandardSQLTypeName.STRUCT) {
-      val struct = field.subFields
-        .associate { it.name to factory(it, metadata.structType.columns[it.name]
-          ?: metadata.structType.all ?: BigQueryMetadataFactory()) }
-      return BigQueryObjectMapper.from(StandardSQLTypeName.STRUCT, metadata.type)!!.factory(jsonMapper, null, struct)
-    }
-    return BigQueryObjectMapper.from(type, metadata.type)?.factory(jsonMapper, null, mapOf())
-      ?: provideNoBigQueryObjectMapper(type, metadata.subType)
-      ?: error("No mapper found for type $type with metadata $metadata")
-  }
-
-  private fun provideNoBigQueryObjectMapper(type: StandardSQLTypeName, target: Type? = null): BigQueryMapper<*>? {
-    return (BigQueryPrimitive.from(type, target) ?: BigQueryDate.from(type, target))?.mapper
+    return factoryWithoutArray(field, type, metadata, { it.type })
   }
 
   fun fromSchema(
@@ -83,4 +71,30 @@ class BigQueryMapperFactory(
 
   private fun toStructMetadata(structFields: Map<String, FieldAccessor<*>>) =
     BigQueryStructType(structFields.mapValues { toMetadataFactory(it.value) })
+
+  private fun factoryWithoutArray(
+    field: Field,
+    type: StandardSQLTypeName,
+    metadata: BigQueryMetadataFactory,
+    getType: (BigQueryMetadataFactory) -> Type?
+  ): BigQueryMapper<*> {
+    if (type == StandardSQLTypeName.STRUCT) {
+      val struct = field.subFields
+        .associate {
+          val name = it.name
+          name to factory(
+            it, metadata.structType.columns[name]
+              ?: metadata.structType.all ?: BigQueryMetadataFactory()
+          )
+        }
+      return BigQueryObjectMapper.from(StandardSQLTypeName.STRUCT, metadata.type)!!.factory(jsonMapper, null, struct)
+    }
+    return BigQueryObjectMapper.from(type, metadata.type)?.factory(jsonMapper, null, mapOf())
+      ?: provideNoBigQueryObjectMapper(type, getType(metadata))
+      ?: error("No mapper found for type $type with metadata $metadata")
+  }
+
+  private fun provideNoBigQueryObjectMapper(type: StandardSQLTypeName, target: Type? = null): BigQueryMapper<*>? {
+    return (BigQueryPrimitive.from(type, target) ?: BigQueryDate.from(type, target))?.mapper
+  }
 }
