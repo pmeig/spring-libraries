@@ -19,19 +19,22 @@ private val cache = mutableMapOf<String, Any>()
 
 fun entityTestMetadata_expected() = getCache(ENTITY_TEST_METADATA) {
   val clazz = EntityTest::class.javaObjectType
+  val constructor = clazz.declaredConstructors.find { it.parameterCount == 0 }!!
   DataMetadata(
     "entity_test",
     generateEntityTestDataPrimary(),
     generateEntityTestColumn(clazz)
-  )
+  ) {
+    constructor.newInstance()
+  }
 }
 
 fun arrayMetadataFactory_expected(): BigQueryMetadataFactory = getCache(ARRAY_METADATA_FACTORY) {
   BigQueryMetadataFactory(List::class.java, String::class.java)
 }
 
-fun generateEntityTestColumn(clazz: Class<EntityTest>): Map<String, FieldAccessor<*>> {
-  val columns = mutableMapOf<String, FieldAccessor<*>>()
+fun generateEntityTestColumn(clazz: Class<EntityTest>): Map<String, FieldAccessor<Any>> {
+  val columns = mutableMapOf<String, FieldAccessor<Any>>()
   clazz.declaredFields.filter { !listOf("struct", "secretName").contains(it.name) }.forEach {
     columns[it.name] = getFieldByCache(it)
   }
@@ -70,8 +73,8 @@ fun structMetadataFactory_expected(): BigQueryMetadataFactory =
 
 fun generateKeyMetadataFactory(name: String): String = "${name}_metadataFactory"
 
-fun generateColumnSuperclass(clazz: Class<*>): Map<String, FieldAccessor<*>> = if (clazz == Any::class.javaObjectType)
-  emptyMap<String, FieldAccessor<Any>>()
+fun generateColumnSuperclass(clazz: Class<*>): Map<String, FieldAccessor<Any>> = if (clazz == Any::class.javaObjectType)
+  emptyMap()
 else
   clazz.declaredFields.associate {
     it.name.replace("By", "_by") to FieldAccessorWrapper<Any>(it)

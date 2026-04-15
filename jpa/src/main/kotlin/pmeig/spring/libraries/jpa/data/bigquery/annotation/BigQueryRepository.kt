@@ -1,4 +1,4 @@
-package pmeig.spring.libraries.jpa.data.bigquery.registrar
+package pmeig.spring.libraries.jpa.data.bigquery.annotation
 
 import org.springframework.stereotype.Component
 

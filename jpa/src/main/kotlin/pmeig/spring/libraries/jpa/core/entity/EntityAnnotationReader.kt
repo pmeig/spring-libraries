@@ -30,6 +30,7 @@ class EntityAnnotationReader {
   )
 
   fun metadata(type: KClass<*>): DataMetadata = metadata(type.javaObjectType)
+  @Suppress("UNCHECKED_CAST")
   fun metadata(type: Class<*>): DataMetadata {
     if (!AnnotatedElementUtils.hasAnnotation(type, Entity::class.java)) {
       error("The class $type is not an entity")
@@ -41,7 +42,12 @@ class EntityAnnotationReader {
         }
           ?: toSnakeCase(type.simpleName)
       val (columns, primaryKey) = extractColumns(type)
-      DataMetadata(tableName, primaryKey ?: error("No primary key found for entity $type"), columns)
+      val constructor = type.declaredConstructors.find { it.parameterCount == 0 } ?: error("No default constructor found for entity $type")
+      DataMetadata(tableName, primaryKey ?: error("No primary key found for entity $type"),
+        columns as Map<String, FieldAccessor<Any>>
+      ) {
+        constructor.newInstance()
+      }
     }
   }
 
@@ -118,12 +124,12 @@ class EntityAnnotationReader {
         columnName to FieldAccessorWrapper<Any>(field)
       )
       val dataPrimaryMetadata = DataPrimaryMetadata(
-        field, embeddedColumns, isEmbedded
+        field, embeddedColumns as Map<String, FieldAccessor<Any>>, isEmbedded
       )
       if (isEmbedded) return Pair(embeddedColumns.map {
         Pair(
           it.key,
-          ParentFieldAccessor(field, it.value as FieldAccessor<Any>)
+          ParentFieldAccessor(field, it.value)
         )
       }, dataPrimaryMetadata)
     return Pair(listOf(), dataPrimaryMetadata)

@@ -5,7 +5,8 @@ import pmeig.spring.libraries.jpa.core.FieldAccessor
 data class DataMetadata(
   val table: String,
   val primary: DataPrimaryMetadata,
-  val columns: Map<String, FieldAccessor<*>> = emptyMap()
+  val columns: Map<String, FieldAccessor<Any>> = emptyMap(),
+  val createEntity: () -> Any
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true

@@ -5,7 +5,7 @@ import java.lang.reflect.Field
 
 data class DataPrimaryMetadata(
   val field: Field? = null,
-  val columns: Map<String, FieldAccessor<*>> = emptyMap(),
+  val columns: Map<String, FieldAccessor<Any>> = emptyMap(),
   val embedded: Boolean = false
 ) {
   fun get(entity: Any?, column: String) = columns[column]?.get(entity)
