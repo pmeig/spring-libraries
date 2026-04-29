@@ -21,8 +21,8 @@ class QueryCache(
 
   val tableName = metadata.table
   val table = "`${finishByPointIfNotEmpty(dataset.project)}${finishByPointIfNotEmpty(dataset.value)}${tableName}`"
-  val selectById = "SELECT ${metadata.primary.columns.keys.joinToString(",")} FROM `${metadata.table}` WHERE ${
-    metadata.primary.columns.keys.joinToString("_")
+  val selectById = "SELECT ${metadata.columns.keys.joinToString(",")} FROM `${metadata.table}` WHERE ${
+    metadata.primary.columns.keys.joinToString(" || '_' || ")
   } in (@ids)"
 
   private val insertQueryStart = "INSERT INTO $table (${metadata.columns.keys.joinToString(",")}) " +

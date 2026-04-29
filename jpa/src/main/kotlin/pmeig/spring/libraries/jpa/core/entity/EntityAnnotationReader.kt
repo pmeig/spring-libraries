@@ -5,6 +5,8 @@ import jakarta.persistence.EmbeddedId
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.MappedSuperclass
+import org.springframework.cache.CacheManager
+import org.springframework.cache.get
 import org.springframework.core.annotation.AnnotatedElementUtils
 import org.springframework.stereotype.Service
 import org.springframework.util.ClassUtils
@@ -12,6 +14,7 @@ import pmeig.spring.libraries.jpa.core.FieldAccessor
 import pmeig.spring.libraries.jpa.core.FieldAccessorWrapper
 import pmeig.spring.libraries.jpa.core.ParentFieldAccessor
 import pmeig.spring.libraries.jpa.core.annotation.Struct
+import pmeig.spring.libraries.jpa.core.cache.DataCacheNames
 import pmeig.spring.libraries.jpa.core.entity.model.DataMetadata
 import pmeig.spring.libraries.jpa.core.entity.model.DataPrimaryMetadata
 import java.lang.reflect.Field
@@ -19,11 +22,11 @@ import java.util.regex.Pattern
 import kotlin.reflect.KClass
 
 @Service
-class EntityAnnotationReader {
+class EntityAnnotationReader(
+  private val cacheManager: CacheManager
+) {
   private val upperCaseCatcher = Pattern.compile("[A-Z]+").toRegex()
   private val lowerCaseCatcher = Pattern.compile("[a-z]+").toRegex()
-
-  private val cache = mutableMapOf<Class<*>, DataMetadata>()
 
   fun metadata(source: Any): DataMetadata = metadata(
     source as? Class<*> ?: source as? KClass<*> ?: ClassUtils.getUserClass(source)
@@ -31,51 +34,37 @@ class EntityAnnotationReader {
 
   fun metadata(type: KClass<*>): DataMetadata = metadata(type.javaObjectType)
   @Suppress("UNCHECKED_CAST")
-  fun metadata(type: Class<*>): DataMetadata {
+  fun metadata(type: Class<*>) = DataCacheNames.useCache(cacheManager, DataCacheNames.METADATA,
+    type.typeName, DataMetadata::class.java) {
     if (!AnnotatedElementUtils.hasAnnotation(type, Entity::class.java)) {
       error("The class $type is not an entity")
     }
-    return cache.computeIfAbsent(type) {
-      val tableName =
-        AnnotatedElementUtils.getMergedAnnotation(type, Entity::class.java)?.name?.ifEmpty {
-          toSnakeCase(type.simpleName)
-        }
-          ?: toSnakeCase(type.simpleName)
-      val (columns, primaryKey) = extractColumns(type)
-      val constructor = type.declaredConstructors.find { it.parameterCount == 0 } ?: error("No default constructor found for entity $type")
-      DataMetadata(tableName, primaryKey ?: error("No primary key found for entity $type"),
-        columns as Map<String, FieldAccessor<Any>>
-      ) {
-        constructor.newInstance()
+    val tableName =
+      AnnotatedElementUtils.getMergedAnnotation(type, Entity::class.java)?.name?.ifEmpty {
+        toSnakeCase(type.simpleName)
       }
-    }
-  }
-
-
-  fun extractId(entity: Any?, clazz: Class<*>? = entity?.let { ClassUtils.getUserClass(it) }): Any? {
-    return entity?.let {
-      val idField = clazz?.declaredFields?.firstOrNull {
-        AnnotatedElementUtils.hasAnnotation(it, Id::class.java)
-                || AnnotatedElementUtils.hasAnnotation(it, EmbeddedId::class.java)
-      }
-      idField?.let {
-        it.isAccessible = true
-        it.get(it)
-      } ?: extractId(entity, clazz?.superclass)
+        ?: toSnakeCase(type.simpleName)
+    val (columns, primaryKey) = extractColumns(type)
+    val constructor = type.declaredConstructors.find { it.parameterCount == 0 } ?: error("No default constructor found for entity $type")
+    DataMetadata(tableName, primaryKey ?: error("No primary key found for entity $type"),
+      columns as Map<String, FieldAccessor<Any>>
+    ) {
+      constructor.newInstance()
     }
   }
 
   @Suppress("UNCHECKED_CAST")
   fun extractColumns(
     type: Class<*>
-  ): Pair<Map<String, FieldAccessor<*>>, DataPrimaryMetadata?> {
-    if (type == Any::class.java) return Pair(emptyMap(), DataPrimaryMetadata())
-    if (listOf(MappedSuperclass::class.java, Entity::class.java).none { AnnotatedElementUtils.hasAnnotation(type, it) }) return extractColumns(
+  ): Pair<Map<String, FieldAccessor<*>>, DataPrimaryMetadata?> =
+    DataCacheNames.useCache(cacheManager, DataCacheNames.COLUMNS, type.typeName, Pair::class.java) {
+    if (type == Any::class.java) return@useCache Pair(emptyMap<String, FieldAccessor<*>>(), DataPrimaryMetadata())
+    if (listOf(MappedSuperclass::class.java, Entity::class.java).none { AnnotatedElementUtils.hasAnnotation(type, it) }) return@useCache extractColumns(
       type.superclass
     )
     val parentMetadata = extractColumns(type.superclass)
     var dataPrimaryMetadata: DataPrimaryMetadata? = null
-    return type.declaredFields.flatMap { field ->
+    type.declaredFields.flatMap { field ->
       val columnName = extractColumnName(field)
       var struct: Map<String, FieldAccessor<*>> = emptyMap()
       val isEmbedded = AnnotatedElementUtils.hasAnnotation(field, EmbeddedId::class.java)
@@ -92,7 +81,7 @@ class EntityAnnotationReader {
     }.let {
       Pair(it.toMap() + parentMetadata.first, dataPrimaryMetadata ?: parentMetadata.second)
     }
-  }
+  } as Pair<Map<String, FieldAccessor<*>>, DataPrimaryMetadata?>
 
   @Suppress("UNCHECKED_CAST")
   private fun extractStructAccessors(parent: Field): Map<String, FieldAccessor<*>> {

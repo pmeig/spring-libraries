@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory.getLogger
 import org.springframework.stereotype.Component
 import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperFactory
+import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMetadataFactory
 import kotlin.reflect.KClass
 
 private val logger = getLogger(BigQueryClient::class.java)
@@ -53,7 +54,7 @@ class BigQueryClient(
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder
   ): TableResult? {
     return try {
-      val configuration = configurator(QueryJobConfiguration.newBuilder(sql))
+      val configuration = configurator(QueryJobConfiguration.newBuilder(sql).setAllowLargeResults(true))
       bigQuery.create(JobInfo.of(configuration.setDryRun(true).build()))
       bigQuery.query(configuration.setDryRun(false).build(), jobId.setRandomJob().build())
     } catch (e: Exception) {
@@ -66,7 +67,7 @@ class BigQueryClient(
     sql: String,
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder
   ): TableResult {
-    return bigQuery.query(configurator(QueryJobConfiguration.newBuilder(sql)).build(), jobId.setRandomJob().build())
+    return bigQuery.query(configurator(QueryJobConfiguration.newBuilder(sql).setAllowLargeResults(true)).build(), jobId.setRandomJob().build())
   }
 
   fun <T : Any> tryEntity(
@@ -113,14 +114,16 @@ class BigQueryClient(
 
   fun tryRecord(
     sql: String,
+    metadataFactory: Map<String, BigQueryMetadataFactory> = emptyMap(),
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
   ): Map<String, Any?> =
-    tryRecords(sql, configurator).firstOrNull() ?: emptyMap()
+    tryRecords(sql, metadataFactory, configurator).firstOrNull() ?: emptyMap()
 
   fun record(
     sql: String,
+    metadataFactory: Map<String, BigQueryMetadataFactory> = emptyMap(),
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
-  ): Map<String, Any?> = records(sql, configurator).firstOrNull() ?: emptyMap()
+  ): Map<String, Any?> = records(sql, metadataFactory, configurator).firstOrNull() ?: emptyMap()
 
   fun createTableId(table: String, dataset: String = "", project: String = ""): TableId =
     TableId.of(project.ifEmpty { properties.projectId }, dataset.ifEmpty { properties.datasetName }, table)

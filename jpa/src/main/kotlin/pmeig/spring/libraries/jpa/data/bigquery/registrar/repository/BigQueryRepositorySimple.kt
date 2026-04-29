@@ -2,8 +2,15 @@ package pmeig.spring.libraries.jpa.data.bigquery.registrar.repository
 
 import com.google.cloud.bigquery.QueryJobConfiguration
 import com.google.cloud.bigquery.Schema
+import com.google.cloud.bigquery.StandardSQLTypeName
 import com.google.cloud.bigquery.TableId
 import org.springframework.core.annotation.AnnotatedElementUtils
+import org.springframework.data.domain.Example
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.repository.query.FluentQuery
 import pmeig.spring.libraries.jpa.core.FieldAccessor
 import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
 import pmeig.spring.libraries.jpa.core.entity.model.DataMetadata
@@ -12,6 +19,11 @@ import pmeig.spring.libraries.jpa.data.bigquery.annotation.Dataset
 import pmeig.spring.libraries.jpa.data.bigquery.cache.QueryCache
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperFactory
+import java.util.Optional
+import java.util.function.Function
+
+typealias ID = Any
+typealias Entity = Any
 
 @Suppress("unused")
 class BigQueryRepositorySimple(
@@ -22,34 +34,41 @@ class BigQueryRepositorySimple(
 
   private val cache = mutableMapOf<Class<*>, QueryCache>()
 
-  fun save(vararg entities: Any) = save(entities.toList())
+  fun save(entity: Any) = save(listOf(entity)).firstOrNull()
+  fun save(entity: Any, vararg entities: Any) = save(listOf(entity) + entities.toList())
 
   fun save(entities: Iterable<Any>): Collection<Any> {
     val all = entities.toMutableList()
     if (all.isEmpty()) {
       return all
     }
-    val queries = getQueries(all.first())
+    val entityRef = all.first()
+    val queries = getQueries(entityRef)
     val (tmpTable, tableName) = createTmpTable(queries, all)
-    client.tryQuery(queries.upsertQuery.replace(QueryCache.TABLE_STAGING, tableName))
+    val saved = client.tryEntities(entityRef.javaClass, queries.upsertQuery.replace(QueryCache.TABLE_STAGING, tableName))
     client.drop(tmpTable)
-    return all
+    return saved
   }
 
+  fun find(entity: Any) = find(listOf(entity)).firstOrNull()
+  fun find(entity: Any, vararg entities: Any) = find(listOf(entity) + entities.toList())
   fun find(entities: Iterable<Any>): Collection<Any> {
     val all = entities.toMutableList()
     if (all.isEmpty()) {
       return all
     }
-    val queries = getQueries(all.first())
-    return client.tryQuery(queries.selectById, applyParameters(queries, all, queries.metadata.columns.keys))?.streamAll()
-      ?.map {
-        val entity = queries.metadata.createEntity()
-        queries.metadata.columns.forEach { (name, accessor) ->
-          accessor.set(entity, it.get(name))
+    val entityRef = all.first()
+    val queries = getQueries(entityRef)
+    return client.tryEntities(entityRef.javaClass, queries.selectById) {
+      it.addNamedParameter("ids", com.google.cloud.bigquery.QueryParameterValue.array(
+        entities.map {
+          entity -> queries.metadata.primary.columns.values.joinToString("_") {
+            accessor ->
+            accessor.get(entity)?.toString() ?: ""
         }
-        entity
-      }?.toList()?.toMutableList() ?: mutableListOf()
+        }.toTypedArray(), StandardSQLTypeName.STRING
+      ))
+    }
   }
 
   private fun createTmpTable(
