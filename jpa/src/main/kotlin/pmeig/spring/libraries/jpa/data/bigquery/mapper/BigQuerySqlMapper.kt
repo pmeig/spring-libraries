@@ -4,7 +4,6 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Component
 import pmeig.spring.libraries.jpa.core.entity.model.DataMetadata
 
-private const val GROUP_BY = " GROUP BY "
 private const val ORDER_BY = " ORDER BY "
 private const val LIMIT = " LIMIT "
 private const val OFFSET = " OFFSET "

@@ -3,13 +3,13 @@ package pmeig.spring.libraries.jpa.data.bigquery
 import com.google.cloud.bigquery.QueryJobConfiguration
 import com.google.cloud.bigquery.Schema
 import com.google.cloud.bigquery.TableResult
+import org.springframework.cache.CacheManager
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Sort
+import pmeig.spring.libraries.jpa.core.cache.DataCacheNames
 import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
 import pmeig.spring.libraries.jpa.core.entity.model.DataMetadata
-import pmeig.spring.libraries.jpa.data.bigquery.cache.BigQueryEntityCache
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryFieldMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQuerySqlMapper
@@ -21,7 +21,8 @@ import kotlin.reflect.KClass
 abstract class BigQueryMultiClient(
   private val mapperFactory: BigQueryMapperFactory,
   private val entityAnnotationReader: EntityAnnotationReader,
-  private val sqlMapper: BigQuerySqlMapper
+  private val sqlMapper: BigQuerySqlMapper,
+  protected val cacheManager: CacheManager
 ) {
   private val cacheMetadata = mutableMapOf<KClass<*>, DataMetadata>()
   abstract fun query(
@@ -88,7 +89,6 @@ abstract class BigQueryMultiClient(
     entityRef: KClass<T>,
     pageable: Pageable,
     sql: String,
-    withTotal: Boolean = true,
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
   ): Page<T> {
     val metadata = getMetadata(entityRef)
@@ -96,7 +96,7 @@ abstract class BigQueryMultiClient(
     val result = tableResult.iterateAll().first()
     val items = result.get("items").repeatedValue!!
     val total = result.get("total").longValue
-    val entities = toEntity(entityRef) {
+    val entities = toEntity(entityRef, metadata) {
       TableResult.newBuilder()
         .setSchema(Schema.of(tableResult.schema!!.fields.get("items").subFields))
         .setPageNoSchema(BigQueryPage(items))
@@ -107,17 +107,14 @@ abstract class BigQueryMultiClient(
 
 
   @Suppress("UNCHECKED_CAST")
-  private fun <T : Any> toEntity(entity: KClass<T>, executor: () -> TableResult?) = exec(executor) { tableResult ->
-    val entityMetadata =
-      cacheMappers.getOrPut(entity.qualifiedName!! + "@${tableResult.schema!!.fields.joinToString("_") { it.name }}") {
-        val entityFieldMappers =
-          createEntityFieldMappers(entity, tableResult).ifEmpty { error("No columns found for $entity") }
-        val constructor = extractEmptyConstructor(entity.javaObjectType)
-        BigQueryEntityCache(constructor, entityFieldMappers)
-      }
+  private fun <T : Any> toEntity(entity: KClass<T>, metadata: DataMetadata = getMetadata(entity), executor: () -> TableResult?) = exec(executor) { tableResult ->
     tableResult.iterateAll().map {
-      val newEntity = entityMetadata.constructor.newInstance() as T
-      entityMetadata.fieldMappers.forEach { (fieldName, mapper) ->
+      val newEntity = metadata.createEntity() as T
+      val mappers = DataCacheNames.useCache(cacheManager, DataCacheNames.MAPPER_FIELDS,
+        entity.qualifiedName!! + "_" + metadata.columns.keys.joinToString("-"), Map::class.java) {
+        createEntityFieldMappers(entity, tableResult, metadata)
+      } as Map<String, BigQueryFieldMapper<*>>
+      mappers.forEach { (fieldName, mapper) ->
         val fieldValue = it.get(fieldName)
         mapper.map(newEntity, fieldValue)
       }
@@ -125,17 +122,12 @@ abstract class BigQueryMultiClient(
     }
   }
 
-  private fun <T : Any> extractEmptyConstructor(clazz: Class<T>) =
-    clazz.declaredConstructors.firstOrNull { it.parameterCount == 0 }?.apply {
-      isAccessible = true
-    } ?: error("No empty constructor found for $clazz")
-
   @Suppress("UNCHECKED_CAST")
   private fun <T : Any> createEntityFieldMappers(
     entity: KClass<T>,
-    tableResult: TableResult
+    tableResult: TableResult,
+    metadata: DataMetadata
   ): Map<String, BigQueryFieldMapper<*>> {
-    val metadata = entityAnnotationReader.metadata(entity)
     val schema = tableResult.schema ?: return emptyMap()
     return schema.fields.associate {
       val accessor = metadata.columns[it.name]!!

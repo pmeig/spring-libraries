@@ -4,8 +4,8 @@ import org.springframework.cache.CacheManager
 
 interface DataCacheNames {
   companion object {
+    const val MAPPER_FIELDS = "data-mapper-fields"
     const val METADATA = "data-metadata"
-    const val QUERY = "data-query"
     const val COLUMNS = "data-columns"
 
     fun <T : Any> useCache(

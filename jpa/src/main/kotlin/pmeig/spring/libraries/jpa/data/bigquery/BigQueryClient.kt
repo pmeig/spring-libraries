@@ -12,8 +12,10 @@ import com.google.cloud.bigquery.TableInfo
 import com.google.cloud.bigquery.TableResult
 import com.google.cloud.spring.autoconfigure.bigquery.GcpBigQueryProperties
 import org.slf4j.LoggerFactory.getLogger
+import org.springframework.cache.CacheManager
 import org.springframework.stereotype.Component
 import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
+import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQuerySqlMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperFactory
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMetadataFactory
 import kotlin.reflect.KClass
@@ -27,8 +29,10 @@ class BigQueryClient(
   private val jobId: JobId.Builder,
   private val properties: GcpBigQueryProperties,
   entityAnnotationReader: EntityAnnotationReader,
+  bigQuerySqlMapper: BigQuerySqlMapper,
+  cacheManager: CacheManager,
   mapperFactory: BigQueryMapperFactory,
-) : BigQueryMultiClient(mapperFactory, entityAnnotationReader) {
+) : BigQueryMultiClient(mapperFactory, entityAnnotationReader, bigQuerySqlMapper, cacheManager) {
 
   fun getTable(table: String, dataset: String = "", project: String = "")
   = getTable(createTableId(table, dataset, project))
