@@ -18,6 +18,7 @@ import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQuerySqlMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperFactory
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMetadataFactory
+import java.time.Duration
 import kotlin.reflect.KClass
 
 private val logger = getLogger(BigQueryClient::class.java)
@@ -34,24 +35,34 @@ class BigQueryClient(
   mapperFactory: BigQueryMapperFactory,
 ) : BigQueryMultiClient(mapperFactory, entityAnnotationReader, bigQuerySqlMapper, cacheManager) {
 
+  @JvmOverloads
   fun getTable(table: String, dataset: String = "", project: String = "")
   = getTable(createTableId(table, dataset, project))
 
   fun getTable(table: TableId): TableDefinition? = bigQuery.getTable(table).getDefinition()
 
   fun exists(table: TableId): Boolean = bigQuery.getTable(table).exists()
+  @JvmOverloads
   fun exists(table: String, dataset: String = "", project: String = ""): Boolean =
     exists(createTableId(table, dataset, project))
-
-  fun createTable(schema: Schema, table: TableId): Boolean {
+  
+  @JvmOverloads
+  fun createTable(schema: Schema, table: TableId, expiration: Duration? = null): Boolean {
     val tableDefinition = StandardTableDefinition.of(schema)
-    return bigQuery.create(TableInfo.newBuilder(table, tableDefinition).build()).exists()
+    var tableInfoBuilder = TableInfo.newBuilder(table, tableDefinition)
+    expiration?.let {
+      tableInfoBuilder = tableInfoBuilder.setExpirationTime(it.toMillis())
+    }
+    return bigQuery.create(tableInfoBuilder.build()).exists()
   }
+  @JvmOverloads
   fun createTable(schema: Schema, table: String, dataset: String = "", project: String = "")
   = createTable(schema, createTableId(table, dataset, project))
 
+  @JvmOverloads
   fun drop(table: String, dataset: String = "", project: String = "") = drop(createTableId(table, dataset, project))
   fun drop(table: TableId) = bigQuery.delete(table)
+
 
   override fun tryQuery(
     sql: String,
@@ -74,6 +85,7 @@ class BigQueryClient(
     return bigQuery.query(configurator(QueryJobConfiguration.newBuilder(sql).setAllowLargeResults(true)).build(), jobId.setRandomJob().build())
   }
 
+  @JvmOverloads
   fun <T : Any> tryEntity(
     entityRef: Class<T>,
     sql: String,
@@ -81,6 +93,7 @@ class BigQueryClient(
   ) =
     tryEntity(entityRef.kotlin, sql, configurator)
 
+  @JvmOverloads
   fun <T : Any> tryEntity(
     entityRef: KClass<T>,
     sql: String,
@@ -88,6 +101,7 @@ class BigQueryClient(
   ) =
     tryEntities(entityRef, sql, configurator).firstOrNull()
 
+  @JvmOverloads
   fun <T : Any> entity(
     entityRef: Class<T>,
     sql: String,
@@ -102,6 +116,7 @@ class BigQueryClient(
   ) =
     entities(entityRef, sql, configurator).firstOrNull()
 
+  @JvmOverloads
   fun tryJson(
     sql: String,
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
@@ -109,6 +124,7 @@ class BigQueryClient(
     return toJson(sql) { tryQuery(it, configurator) }
   }
 
+  @JvmOverloads
   fun json(
     sql: String,
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
@@ -123,12 +139,14 @@ class BigQueryClient(
   ): Map<String, Any?> =
     tryRecords(sql, metadataFactory, configurator).firstOrNull() ?: emptyMap()
 
+  @JvmOverloads
   fun record(
     sql: String,
     metadataFactory: Map<String, BigQueryMetadataFactory> = emptyMap(),
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
   ): Map<String, Any?> = records(sql, metadataFactory, configurator).firstOrNull() ?: emptyMap()
 
+  @JvmOverloads
   fun createTableId(table: String, dataset: String = "", project: String = ""): TableId =
     TableId.of(project.ifEmpty { properties.projectId }, dataset.ifEmpty { properties.datasetName }, table)
 

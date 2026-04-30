@@ -4,13 +4,8 @@ import com.google.cloud.bigquery.QueryJobConfiguration
 import com.google.cloud.bigquery.Schema
 import com.google.cloud.bigquery.StandardSQLTypeName
 import com.google.cloud.bigquery.TableId
+import org.springframework.cache.CacheManager
 import org.springframework.core.annotation.AnnotatedElementUtils
-import org.springframework.data.domain.Example
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Sort
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.repository.query.FluentQuery
 import pmeig.spring.libraries.jpa.core.FieldAccessor
 import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
 import pmeig.spring.libraries.jpa.core.entity.model.DataMetadata
@@ -19,17 +14,13 @@ import pmeig.spring.libraries.jpa.data.bigquery.annotation.Dataset
 import pmeig.spring.libraries.jpa.data.bigquery.cache.QueryCache
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperFactory
-import java.util.Optional
-import java.util.function.Function
-
-typealias ID = Any
-typealias Entity = Any
 
 @Suppress("unused")
 class BigQueryRepositorySimple(
   private val client: BigQueryClient,
   private val entityReader: EntityAnnotationReader,
-  private val mapperFactory: BigQueryMapperFactory
+  private val mapperFactory: BigQueryMapperFactory,
+  private val cacheManager: CacheManager
 ) {
 
   private val cache = mutableMapOf<Class<*>, QueryCache>()
@@ -80,7 +71,7 @@ class BigQueryRepositorySimple(
     val project = queries.dataset.project
     var index = 1
     while (client.exists(table, dataset, project)) {
-      table += index++
+      table = queries.tableName + index++
     }
     client.createTable(queries.schema, table, dataset, project)
     client.tryQuery(queries.insert(entities), applyParameters(queries, entities))

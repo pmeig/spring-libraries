@@ -25,6 +25,7 @@ abstract class BigQueryMultiClient(
   protected val cacheManager: CacheManager
 ) {
   private val cacheMetadata = mutableMapOf<KClass<*>, DataMetadata>()
+
   abstract fun query(
     sql: String,
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
@@ -57,6 +58,7 @@ abstract class BigQueryMultiClient(
     } ?: emptyList()
   }
 
+  @JvmOverloads
   fun <T : Any> tryEntities(
     entityRef: Class<T>,
     sql: String,
@@ -64,6 +66,7 @@ abstract class BigQueryMultiClient(
   ) =
     entities(entityRef.kotlin, sql, configurator)
 
+  @JvmOverloads
   fun <T : Any> tryEntities(
     entityRef: KClass<T>,
     sql: String,
@@ -71,6 +74,7 @@ abstract class BigQueryMultiClient(
   ) =
     toEntity(entityRef) { tryQuery(sql, configurator) } ?: emptyList()
 
+  @JvmOverloads
   fun <T : Any> entities(
     entityRef: Class<T>,
     sql: String,
@@ -78,6 +82,7 @@ abstract class BigQueryMultiClient(
   ) =
     entities(entityRef.kotlin, sql, configurator)
 
+  @JvmOverloads
   fun <T : Any> entities(
     entityRef: KClass<T>,
     sql: String,
@@ -85,6 +90,7 @@ abstract class BigQueryMultiClient(
   ) =
     toEntity(entityRef) { query(sql, configurator) } ?: emptyList()
 
+  @JvmOverloads
   fun <T : Any> entities(
     entityRef: KClass<T>,
     pageable: Pageable,
