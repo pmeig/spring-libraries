@@ -1,4 +1,4 @@
-package pmeig.spring.libraries.jpa.data.bigquery
+package pmeig.spring.libraries.jpa.data.bigquery.client
 
 import com.google.cloud.bigquery.BigQuery
 import com.google.cloud.bigquery.JobId
@@ -33,11 +33,16 @@ class BigQueryClient(
   bigQuerySqlMapper: BigQuerySqlMapper,
   cacheManager: CacheManager,
   mapperFactory: BigQueryMapperFactory,
-) : BigQueryMultiClient(mapperFactory, entityAnnotationReader, bigQuerySqlMapper, cacheManager) {
+) : BigQueryClientSimple(
+  entityAnnotationReader,
+  bigQuerySqlMapper,
+  cacheManager,
+  mapperFactory
+) {
 
   @JvmOverloads
   fun getTable(table: String, dataset: String = "", project: String = "")
-  = getTable(createTableId(table, dataset, project))
+          = getTable(createTableId(table, dataset, project))
 
   fun getTable(table: TableId): TableDefinition? = bigQuery.getTable(table).getDefinition()
 
@@ -45,7 +50,7 @@ class BigQueryClient(
   @JvmOverloads
   fun exists(table: String, dataset: String = "", project: String = ""): Boolean =
     exists(createTableId(table, dataset, project))
-  
+
   @JvmOverloads
   fun createTable(schema: Schema, table: TableId, expiration: Duration? = null): Boolean {
     val tableDefinition = StandardTableDefinition.of(schema)
@@ -56,13 +61,12 @@ class BigQueryClient(
     return bigQuery.create(tableInfoBuilder.build()).exists()
   }
   @JvmOverloads
-  fun createTable(schema: Schema, table: String, dataset: String = "", project: String = "")
-  = createTable(schema, createTableId(table, dataset, project))
+  fun createTable(schema: Schema, table: String, dataset: String = "", project: String = "", expiration: Duration? = null)
+          = createTable(schema, createTableId(table, dataset, project), expiration)
 
   @JvmOverloads
   fun drop(table: String, dataset: String = "", project: String = "") = drop(createTableId(table, dataset, project))
   fun drop(table: TableId) = bigQuery.delete(table)
-
 
   override fun tryQuery(
     sql: String,
@@ -82,82 +86,86 @@ class BigQueryClient(
     sql: String,
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder
   ): TableResult {
-    return bigQuery.query(configurator(QueryJobConfiguration.newBuilder(sql).setAllowLargeResults(true)).build(), jobId.setRandomJob().build())
+    return bigQuery.query(
+      configurator(QueryJobConfiguration.newBuilder(sql).setAllowLargeResults(true)).build(),
+      jobId.setRandomJob().build()
+    )
   }
 
+  fun batch(
+    sql: String,
+    configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
+  ) = query(sql, toBatch(configurator))
+
+  fun tryBatch(
+    sql: String,
+    configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
+  ) = tryQuery(sql, toBatch(configurator))
+
   @JvmOverloads
-  fun <T : Any> tryEntity(
+  fun <T : Any> tryBatchEntity(
     entityRef: Class<T>,
     sql: String,
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
   ) =
-    tryEntity(entityRef.kotlin, sql, configurator)
+    tryEntity(entityRef, sql, toBatch(configurator))
 
   @JvmOverloads
-  fun <T : Any> tryEntity(
+  fun <T : Any> tryBatchEntity(
     entityRef: KClass<T>,
     sql: String,
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
   ) =
-    tryEntities(entityRef, sql, configurator).firstOrNull()
+    tryEntity(entityRef, sql, toBatch(configurator))
 
   @JvmOverloads
-  fun <T : Any> entity(
+  fun <T : Any> batchEntity(
     entityRef: Class<T>,
     sql: String,
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
   ) =
-    entity(entityRef.kotlin, sql, configurator)
+    entity(entityRef, sql, toBatch(configurator))
 
-  fun <T : Any> entity(
+  @JvmOverloads
+  fun <T : Any> batchEntity(
     entityRef: KClass<T>,
     sql: String,
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
   ) =
-    entities(entityRef, sql, configurator).firstOrNull()
+    entity(entityRef, sql, toBatch(configurator))
 
   @JvmOverloads
-  fun tryJson(
+  fun tryBatchJson(
     sql: String,
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
-  ): String? {
-    return toJson(sql) { tryQuery(it, configurator) }
-  }
+  ): String? =
+    tryJson(sql, toBatch(configurator))
 
   @JvmOverloads
-  fun json(
+  fun batchJson(
     sql: String,
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
-  ): String? {
-    return toJson(sql) { query(it, configurator) }
-  }
+  ): String? =
+    json(sql, toBatch(configurator))
 
-  fun tryRecord(
+  @JvmOverloads
+  fun tryBatchRecord(
     sql: String,
     metadataFactory: Map<String, BigQueryMetadataFactory> = emptyMap(),
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
   ): Map<String, Any?> =
-    tryRecords(sql, metadataFactory, configurator).firstOrNull() ?: emptyMap()
+    tryRecord(sql, metadataFactory, toBatch(configurator))
 
   @JvmOverloads
-  fun record(
+  fun batchRecord(
     sql: String,
     metadataFactory: Map<String, BigQueryMetadataFactory> = emptyMap(),
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
-  ): Map<String, Any?> = records(sql, metadataFactory, configurator).firstOrNull() ?: emptyMap()
+  ): Map<String, Any?> =
+    record(sql, metadataFactory, toBatch(configurator))
 
   @JvmOverloads
   fun createTableId(table: String, dataset: String = "", project: String = ""): TableId =
     TableId.of(project.ifEmpty { properties.projectId }, dataset.ifEmpty { properties.datasetName }, table)
-
-  private fun toJson(sql: String, executor: (sql: String) -> TableResult?): String? {
-    val toJsonQuery = "WITH request AS ($sql) " +
-            "SELECT to_json_string(request) AS json FROM request request"
-    return exec({
-      executor(toJsonQuery)
-    }) {
-      it.iterateAll().firstOrNull()?.get("json")?.stringValue
-    }
-  }
 
 }

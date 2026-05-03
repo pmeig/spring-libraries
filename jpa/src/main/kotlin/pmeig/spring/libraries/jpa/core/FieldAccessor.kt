@@ -1,8 +1,19 @@
 package pmeig.spring.libraries.jpa.core
 
+import pmeig.spring.libraries.jpa.core.converter.configuration.formatter.DateTimeFormatterProvider
+import pmeig.spring.libraries.jpa.core.converter.configuration.zoneId.DataZoneIdProvider
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.Type
+
+internal var zoneIdProviderInstance: DataZoneIdProvider? = null
+
+val ZONE_ID_PROVIDER get() = zoneIdProviderInstance!!
+
+internal var dateTimeFormatterInstance: DateTimeFormatterProvider? = null
+
+val DATE_TIME_FORMATTER_PROVIDER: DateTimeFormatterProvider
+  get() = dateTimeFormatterInstance!!
 
 interface FieldAccessor<T>: FieldGetter<T>, FieldSetter<T> {
   val struct: Map<String, FieldAccessor<*>>

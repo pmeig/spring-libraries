@@ -22,14 +22,14 @@ class QueryCache(
   val tableName = metadata.table
   val table = "`${finishByPointIfNotEmpty(dataset.project)}${finishByPointIfNotEmpty(dataset.value)}${tableName}`"
   val selectById = "SELECT ${metadata.columns.keys.joinToString(",")} FROM `${metadata.table}` WHERE ${
-    metadata.primary.columns.keys.joinToString(" || '_' || ")
+    metadata.primary.fromID.keys.joinToString(" || '_' || ")
   } in (@ids)"
 
   private val insertQueryStart = "INSERT INTO $table (${metadata.columns.keys.joinToString(",")}) " +
           "VALUES "
   val upsertQuery = "MERGE $table AS table " +
           "USING (SELECT * FROM `${TABLE_STAGING}`) AS staging " +
-          "ON ${metadata.primary.columns.keys
+          "ON ${metadata.primary.fromID.keys
             .joinToString(" AND ") {
               "table.${it} = staging.${it}"
             }}" +

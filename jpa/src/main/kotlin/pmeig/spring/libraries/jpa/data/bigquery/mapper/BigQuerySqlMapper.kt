@@ -19,7 +19,7 @@ class BigQuerySqlMapper {
     val offset = extractOffset(query, pageable)
     val sqlWithoutSelector = removeSelector(query)
     return """
-      WITH __count AS (SELECT COUNT(${metadata.primary.columns.keys.joinToString(",")}) as count $sqlWithoutSelector), 
+      WITH __count AS (SELECT COUNT(${metadata.primary.fromID.keys.joinToString(",")}) as count $sqlWithoutSelector), 
       __result AS (${extractQueryWithoutOrderLimitAndOffset(sqlWithoutSelector, orderBy, limit, offset)})
       SELECT ARRAY_AGG(items) AS items, ANY_VALUE(__count.count) AS total FROM __count, __result items
     """.trimIndent()
@@ -52,7 +52,7 @@ class BigQuerySqlMapper {
     extractPartQuery(query, pattern, lastIndexFounder).let { Pair(it.first, it.second.ifEmpty { " $pattern $value " }) }
 
   private fun extractOrderBy(query: String, metadata: DataMetadata) = extractPartQuery(query, ORDER_BY, ::endIndexOrderBy).let {
-    if (it.first == -1) Pair(-1, metadata.primary.columns.keys.joinToString(",")) else it
+    if (it.first == -1) Pair(-1, metadata.primary.fromID.keys.joinToString(",")) else it
   }
 
   private fun extractPartQuery(query: String, pattern: String, lastIndexFounder: (String) -> Int): Pair<Int, String> {

@@ -1,4 +1,4 @@
-package pmeig.spring.libraries.jpa.data.bigquery
+package pmeig.spring.libraries.jpa.data.bigquery.client
 
 import com.google.cloud.bigquery.QueryJobConfiguration
 import com.google.cloud.bigquery.Schema
@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable
 import pmeig.spring.libraries.jpa.core.cache.DataCacheNames
 import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
 import pmeig.spring.libraries.jpa.core.entity.model.DataMetadata
+import pmeig.spring.libraries.jpa.data.bigquery.BigQueryPage
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryFieldMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQuerySqlMapper
@@ -24,7 +25,6 @@ abstract class BigQueryMultiClient(
   private val sqlMapper: BigQuerySqlMapper,
   protected val cacheManager: CacheManager
 ) {
-  private val cacheMetadata = mutableMapOf<KClass<*>, DataMetadata>()
 
   abstract fun query(
     sql: String,
@@ -98,7 +98,7 @@ abstract class BigQueryMultiClient(
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
   ): Page<T> {
     val metadata = getMetadata(entityRef)
-    val tableResult = query(sqlMapper.pageQuery(sql, pageable, metadata))
+    val tableResult = query(sqlMapper.pageQuery(sql, pageable, metadata), configurator)
     val result = tableResult.iterateAll().first()
     val items = result.get("items").repeatedValue!!
     val total = result.get("total").longValue

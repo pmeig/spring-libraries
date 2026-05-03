@@ -9,9 +9,9 @@ import org.springframework.core.annotation.AnnotatedElementUtils
 import pmeig.spring.libraries.jpa.core.FieldAccessor
 import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
 import pmeig.spring.libraries.jpa.core.entity.model.DataMetadata
-import pmeig.spring.libraries.jpa.data.bigquery.BigQueryClient
 import pmeig.spring.libraries.jpa.data.bigquery.annotation.Dataset
 import pmeig.spring.libraries.jpa.data.bigquery.cache.QueryCache
+import pmeig.spring.libraries.jpa.data.bigquery.client.BigQueryClient
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperFactory
 
@@ -53,7 +53,7 @@ class BigQueryRepositorySimple(
     return client.tryEntities(entityRef.javaClass, queries.selectById) {
       it.addNamedParameter("ids", com.google.cloud.bigquery.QueryParameterValue.array(
         entities.map {
-          entity -> queries.metadata.primary.columns.values.joinToString("_") {
+          entity -> queries.metadata.primary.fromID.values.joinToString("_") {
             accessor ->
             accessor.get(entity)?.toString() ?: ""
         }
