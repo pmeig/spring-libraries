@@ -93,8 +93,8 @@ class EntityAnnotationReader(
     } as Pair<Map<String, FieldAccessor<*>>, DataPrimaryMetadata?>
 
   @Suppress("UNCHECKED_CAST")
-  private fun extractStructAccessors(parent: Field): Map<String, FieldAccessor<*>> {
-    return parent.type.declaredFields.associate {
+  private fun extractStructAccessors(parent: Field): Map<String, FieldAccessor<*>> =
+    parent.type.declaredFields.associate {
       val name = extractColumnName(it)
       var struct = emptyMap<String, FieldAccessor<*>>()
       if (AnnotatedElementUtils.hasAnnotation(it, Struct::class.java)) {
@@ -104,8 +104,6 @@ class EntityAnnotationReader(
       }
       name to FieldAccessorWrapper<Any>(it, struct)
     }
-
-  }
 
   private fun extractColumnName(field: Field) = AnnotatedElementUtils
     .getMergedAnnotation(field, Column::class.java)?.name?.ifEmpty {

@@ -82,7 +82,7 @@ else
 
 fun generateEntityTestDataPrimary() = AutoIdStateColumns::class.javaObjectType.getDeclaredField("id").let {
   DataPrimaryMetadata(
-    it, mapOf("id" to getFieldByCache(it))
+    FieldAccessorWrapper(it), mapOf("id" to getFieldByCache(it))
   )
 }
 
