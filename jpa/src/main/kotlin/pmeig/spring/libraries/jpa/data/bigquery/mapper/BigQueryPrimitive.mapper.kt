@@ -88,6 +88,7 @@ internal enum class BigQueryPrimitive(private val type: StandardSQLTypeName,
     fun from(type: StandardSQLTypeName, target: KClass<*>): BigQueryPrimitive? = from(type, target.javaObjectType)
     fun from(type: StandardSQLTypeName, target: Type? = null): BigQueryPrimitive? =
       target?.let { clazz -> entries.find { it.type == type && clazz.typeName in it.targets } } ?: entries.find { it.type == type }
+    fun from(target: Type): BigQueryPrimitive? = entries.find { it.targets.contains(target.typeName)}
   }
 
   private val targets = target.map { it.typeName }

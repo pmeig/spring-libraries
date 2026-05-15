@@ -5,6 +5,7 @@ import jakarta.persistence.EmbeddedId
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.MappedSuperclass
+import jakarta.persistence.Table
 import org.springframework.cache.CacheManager
 import org.springframework.core.annotation.AnnotatedElementUtils
 import org.springframework.stereotype.Service
@@ -18,6 +19,7 @@ import pmeig.spring.libraries.jpa.core.entity.model.DataMetadata
 import pmeig.spring.libraries.jpa.core.entity.model.DataPrimaryMetadata
 import java.lang.reflect.Field
 import java.util.regex.Pattern
+import kotlin.jvm.java
 import kotlin.reflect.KClass
 
 @Service
@@ -41,16 +43,19 @@ class EntityAnnotationReader(
     if (!AnnotatedElementUtils.hasAnnotation(type, Entity::class.java)) {
       error("The class $type is not an entity")
     }
-    val tableName =
-      AnnotatedElementUtils.getMergedAnnotation(type, Entity::class.java)?.name?.ifEmpty {
-        toSnakeCase(type.simpleName)
-      }
-        ?: toSnakeCase(type.simpleName)
+    val tableAnnotation = AnnotatedElementUtils.getMergedAnnotation(type, Table::class.java)
+    val fragmentsTableName = listOfNotNull(tableAnnotation?.catalog?.ifEmpty { null },
+      tableAnnotation?.schema?.ifEmpty { null }, tableAnnotation?.name?.ifEmpty { null }
+        ?: AnnotatedElementUtils.getMergedAnnotation(type, Entity::class.java)?.name?.ifEmpty {
+          null
+        } ?: toSnakeCase(type.simpleName))
+    val tableName = fragmentsTableName.joinToString(".")
     val (columns, primaryKey) = extractColumns(type)
     val constructor = type.declaredConstructors.find { it.parameterCount == 0 }
       ?: error("No default constructor found for entity $type")
     DataMetadata(
-      tableName, primaryKey ?: error("No primary key found for entity $type"),
+      "`$tableName`", primaryKey ?: error("No primary key found for entity $type"),
+      type,
       columns as Map<String, FieldAccessor<Any>>
     ) {
       constructor.newInstance()

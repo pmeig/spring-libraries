@@ -157,6 +157,7 @@ internal enum class BigQueryObjectMapper(private val type: StandardSQLTypeName,
       return target?.let { clazz -> entries.find { it.type == type && it.target.typeName == clazz.typeName } }
         ?: entries.find { it.type == type }
     }
+    fun from(target: Type): BigQueryObjectMapper? = entries.find { it.target.typeName == target.typeName}
   }
 
   var factory: (ObjectMapper, BigQueryMapper<*>?, Map<String, BigQueryMapper<*>>) -> BigQueryMapper<*> =

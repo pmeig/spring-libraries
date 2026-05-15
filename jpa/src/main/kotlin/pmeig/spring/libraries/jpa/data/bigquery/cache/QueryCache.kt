@@ -9,7 +9,7 @@ import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryMapper
 @Suppress("unused")
 class QueryCache(
   val metadata: DataMetadata,
-  val dataset: Dataset,
+  dataset: Dataset,
   val mappers: Map<String, BigQueryMapper<Any>>,
   val schema: Schema,
   val configurer: Map<String, (entity: Any, index: Int?) -> (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder>

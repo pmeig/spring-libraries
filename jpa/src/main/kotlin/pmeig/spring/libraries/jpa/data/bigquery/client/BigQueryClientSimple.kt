@@ -17,6 +17,12 @@ abstract class BigQueryClientSimple(
   mapperFactory: BigQueryMapperFactory,
 ) : BigQueryMultiBatchClient(mapperFactory, entityAnnotationReader, bigQuerySqlMapper, cacheManager) {
 
+  fun <T: Any> single(target: KClass<T>, sql: String, configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }) =
+    multiple(target, sql, configurator).firstOrNull()
+
+  fun <T: Any> trySingle(target: KClass<T>, sql: String, configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }) =
+    tryMultiple(target, sql, configurator).firstOrNull()
+
   @JvmOverloads
   fun <T : Any> tryEntity(
     entityRef: Class<T>,

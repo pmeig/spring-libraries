@@ -19,6 +19,14 @@ abstract class BigQueryMultiBatchClient(
 ) : BigQueryMultiClient(mapperFactory, entityAnnotationReader, sqlMapper, cacheManager) {
 
   @JvmOverloads
+  fun batchMultiple(target: KClass<*>, sql: String, configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }) =
+    multiple(target, sql, toBatch(configurator))
+
+  @JvmOverloads
+  fun tryBatchMultiple(target: KClass<*>, sql: String, configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }) =
+    tryMultiple(target, sql, toBatch(configurator))
+
+  @JvmOverloads
   fun batchRecords(
     sql: String,
     metadataFactory: Map<String, BigQueryMetadataFactory> = emptyMap(),

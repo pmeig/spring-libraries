@@ -141,5 +141,6 @@ internal enum class BigQueryDate(
       return target?.let { clazz -> entries.find { it.types.contains(type) && clazz.typeName in it.targets } }
         ?: entries.find { it.types.contains(type) }
     }
+    fun from(target: Type): BigQueryDate? = entries.find { it.targets.contains(target.typeName)}
   }
 }

@@ -23,6 +23,7 @@ fun entityTestMetadata_expected() = getCache(ENTITY_TEST_METADATA) {
   DataMetadata(
     "entity_test",
     generateEntityTestDataPrimary(),
+    EntityTest::class.javaObjectType,
     generateEntityTestColumn(clazz)
   ) {
     constructor.newInstance()

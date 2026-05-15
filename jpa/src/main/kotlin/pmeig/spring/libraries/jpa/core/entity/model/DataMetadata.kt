@@ -5,6 +5,7 @@ import pmeig.spring.libraries.jpa.core.FieldAccessor
 data class DataMetadata(
   val table: String,
   val primary: DataPrimaryMetadata,
+  val reference: Class<*>,
   val columns: Map<String, FieldAccessor<Any>> = emptyMap(),
   val createEntity: () -> Any
 ) {

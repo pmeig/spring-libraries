@@ -15,6 +15,7 @@ import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryFieldMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQuerySqlMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperFactory
+import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperProvider
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMetadataFactory
 import kotlin.reflect.KClass
 
@@ -35,6 +36,24 @@ abstract class BigQueryMultiClient(
     sql: String,
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
   ): TableResult?
+
+  @JvmOverloads
+  @Suppress("UNCHECKED_CAST")
+  fun <T: Any> multiple(target: KClass<T>, sql: String, configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it })
+   = query(sql, configurator).iterateAll().map {
+     it.firstOrNull()?.let { value ->
+       if (value.isNull) null else BigQueryMapperProvider.from<T>(target.javaObjectType).mapper.map(value) as T
+     }
+   }
+
+  @JvmOverloads
+  @Suppress("UNCHECKED_CAST")
+  fun <T: Any> tryMultiple(target: KClass<T>, sql: String, configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }) =
+    tryQuery(sql, configurator)?.iterateAll()?.map {
+      it.firstOrNull()?.let { value ->
+        if (value.isNull) null else BigQueryMapperProvider.from<T>(target.javaObjectType).mapper.map(value) as T
+      }
+    } ?: emptyList()
 
   @JvmOverloads
   fun records(
@@ -116,10 +135,9 @@ abstract class BigQueryMultiClient(
   private fun <T : Any> toEntity(entity: KClass<T>, metadata: DataMetadata = getMetadata(entity), executor: () -> TableResult?) = exec(executor) { tableResult ->
     tableResult.iterateAll().map {
       val newEntity = metadata.createEntity() as T
-      val mappers = DataCacheNames.useCache(cacheManager, DataCacheNames.MAPPER_FIELDS,
-        entity.qualifiedName!! + "_" + metadata.columns.keys.joinToString("-"), Map::class.java) {
+      val mappers = DataCacheNames.mappers(cacheManager, metadata) {
         createEntityFieldMappers(entity, tableResult, metadata)
-      } as Map<String, BigQueryFieldMapper<*>>
+      }
       mappers.forEach { (fieldName, mapper) ->
         val fieldValue = it.get(fieldName)
         mapper.map(newEntity, fieldValue)

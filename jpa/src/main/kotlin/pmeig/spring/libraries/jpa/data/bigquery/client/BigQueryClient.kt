@@ -92,6 +92,22 @@ class BigQueryClient(
     )
   }
 
+  fun <T: Any> batchSingle(
+    target: KClass<T>,
+    sql: String,
+    configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
+  ) = single(target, sql, toBatch(configurator))
+
+  fun <T: Any> tryBatchSingle(
+    target: KClass<T>,
+    sql: String,
+    configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
+  ) = trySingle(
+    target,
+    sql,
+    toBatch(configurator)
+  )
+
   fun batch(
     sql: String,
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
