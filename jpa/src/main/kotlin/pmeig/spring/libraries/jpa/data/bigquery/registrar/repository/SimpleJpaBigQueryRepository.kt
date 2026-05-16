@@ -5,7 +5,6 @@ import com.google.cloud.bigquery.QueryParameterValue
 import com.google.cloud.bigquery.StandardSQLTypeName
 import jakarta.persistence.EntityNotFoundException
 import jakarta.persistence.NoResultException
-import org.springframework.cache.CacheManager
 import org.springframework.data.domain.Example
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -18,7 +17,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.repository.query.FluentQuery
 import pmeig.spring.libraries.jpa.core.addOrder
-import pmeig.spring.libraries.jpa.core.cache.DataCacheNames
+import pmeig.spring.libraries.jpa.core.cache.DataCacheManager
 import pmeig.spring.libraries.jpa.core.converter.specification.SpecificationReader
 import pmeig.spring.libraries.jpa.core.converter.specification.model.SpecificationContext
 import pmeig.spring.libraries.jpa.core.converter.specification.model.SpecificationParameter
@@ -26,6 +25,10 @@ import pmeig.spring.libraries.jpa.core.createSqlPage
 import pmeig.spring.libraries.jpa.core.entity.model.DataMetadata
 import pmeig.spring.libraries.jpa.data.bigquery.client.BigQueryClient
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryFieldMapper
+import pmeig.spring.libraries.jpa.data.bigquery.mappers
+import pmeig.spring.libraries.jpa.data.bigquery.registrar.JpaMethodInvoker
+import pmeig.spring.libraries.jpa.data.bigquery.registrar.JpaMethodInvokerResult
+import java.lang.reflect.Method
 import java.time.Clock
 import java.time.Instant
 import java.util.Optional
@@ -37,8 +40,8 @@ typealias Entity = Any
 class SimpleJpaBigQueryRepository(
   private val client: BigQueryClient,
   private val metadata: DataMetadata,
-  private val cacheManager: CacheManager,
-): JpaRepository<Entity, ID>, JpaSpecificationExecutor<Entity> {
+  private val cacheManager: DataCacheManager,
+): JpaRepository<Entity, ID>, JpaSpecificationExecutor<Entity>, JpaMethodInvoker {
 
   @Suppress("UNCHECKED_CAST")
   private val specificationReader = SpecificationReader(metadata.reference as Class<Entity>)
@@ -58,13 +61,20 @@ class SimpleJpaBigQueryRepository(
   private var mappers: Map<String, BigQueryFieldMapper<*>> = emptyMap()
     get() {
       if (field.isEmpty()) {
-        field = DataCacheNames.mappers(cacheManager, metadata) {
+        field = mappers(cacheManager, metadata) {
           client.tryEntity(metadata.reference, "SELECT * FROM ${metadata.table}") { it.setMaxResults(1) }
-          DataCacheNames.mappers(cacheManager, metadata) { emptyMap() }
+          mappers(cacheManager, metadata) { emptyMap() }
         }
       }
       return field
     }
+
+  override fun invokeMethod(method: Method, args: Array<Any?>) = try {
+    SimpleJpaBigQueryRepository::class.java.getDeclaredMethod(method.name, *method.parameterTypes)
+    JpaMethodInvokerResult(method.invoke(this, *args))
+  } catch (_: NoSuchMethodException) {
+    JpaMethodInvokerResult()
+  }
 
   override fun flush() {
   }

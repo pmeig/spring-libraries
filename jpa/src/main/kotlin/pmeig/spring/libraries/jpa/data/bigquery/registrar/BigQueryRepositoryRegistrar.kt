@@ -22,6 +22,9 @@ class BigQueryRepositoryRegistrar: BeanFactoryPostProcessor, EnvironmentAware {
       classname.substringBeforeLast(".")
     } ?: ""
     val bigQueryRepositories = retrieveBigQueryRepositories(packageName)
+    bigQueryRepositories.forEach { beanDefinition ->
+
+    }
 
   }
 

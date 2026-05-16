@@ -2,7 +2,7 @@ package pmeig.spring.libraries.jpa.data.bigquery.client
 
 import com.google.cloud.bigquery.QueryJobConfiguration
 import com.google.cloud.bigquery.TableResult
-import org.springframework.cache.CacheManager
+import pmeig.spring.libraries.jpa.core.cache.DataCacheManager
 import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQuerySqlMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperFactory
@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
 abstract class BigQueryClientSimple(
   entityAnnotationReader: EntityAnnotationReader,
   bigQuerySqlMapper: BigQuerySqlMapper,
-  cacheManager: CacheManager,
+  cacheManager: DataCacheManager,
   mapperFactory: BigQueryMapperFactory,
 ) : BigQueryMultiBatchClient(mapperFactory, entityAnnotationReader, bigQuerySqlMapper, cacheManager) {
 

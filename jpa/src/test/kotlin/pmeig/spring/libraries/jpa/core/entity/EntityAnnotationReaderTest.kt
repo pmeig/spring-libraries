@@ -3,14 +3,14 @@ package pmeig.spring.libraries.jpa.core.entity
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.whenever
-import org.springframework.cache.CacheManager
+import pmeig.spring.libraries.jpa.core.cache.DataCacheManager
 import pmeig.spring.libraries.jpa.core.cache.DataCacheNames
 import pmeig.spring.libraries.jpa.shared.expected.entityTestMetadata_expected
 import pmeig.spring.libraries.jpa.shared.model.EntityTest
 import kotlin.test.expect
 
 class EntityAnnotationReaderTest {
-  val cacheManager: CacheManager = mock()
+  val cacheManager: DataCacheManager = mock()
   val entityAnnotationReader = EntityAnnotationReader(cacheManager)
 
   @Test

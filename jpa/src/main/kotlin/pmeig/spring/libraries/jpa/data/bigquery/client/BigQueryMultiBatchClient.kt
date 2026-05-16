@@ -1,9 +1,9 @@
 package pmeig.spring.libraries.jpa.data.bigquery.client
 
 import com.google.cloud.bigquery.QueryJobConfiguration
-import org.springframework.cache.CacheManager
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import pmeig.spring.libraries.jpa.core.cache.DataCacheManager
 import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQuerySqlMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperFactory
@@ -15,7 +15,7 @@ abstract class BigQueryMultiBatchClient(
   mapperFactory: BigQueryMapperFactory,
   entityAnnotationReader: EntityAnnotationReader,
   sqlMapper: BigQuerySqlMapper,
-  cacheManager: CacheManager
+  cacheManager: DataCacheManager
 ) : BigQueryMultiClient(mapperFactory, entityAnnotationReader, sqlMapper, cacheManager) {
 
   @JvmOverloads

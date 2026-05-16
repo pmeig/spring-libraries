@@ -6,7 +6,6 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.MappedSuperclass
 import jakarta.persistence.Table
-import org.springframework.cache.CacheManager
 import org.springframework.core.annotation.AnnotatedElementUtils
 import org.springframework.stereotype.Service
 import org.springframework.util.ClassUtils
@@ -14,17 +13,17 @@ import pmeig.spring.libraries.jpa.core.FieldAccessor
 import pmeig.spring.libraries.jpa.core.FieldAccessorWrapper
 import pmeig.spring.libraries.jpa.core.ParentFieldAccessor
 import pmeig.spring.libraries.jpa.core.annotation.Struct
+import pmeig.spring.libraries.jpa.core.cache.DataCacheManager
 import pmeig.spring.libraries.jpa.core.cache.DataCacheNames
 import pmeig.spring.libraries.jpa.core.entity.model.DataMetadata
 import pmeig.spring.libraries.jpa.core.entity.model.DataPrimaryMetadata
 import java.lang.reflect.Field
 import java.util.regex.Pattern
-import kotlin.jvm.java
 import kotlin.reflect.KClass
 
 @Service
 class EntityAnnotationReader(
-  private val cacheManager: CacheManager
+  private val cacheManager: DataCacheManager
 ) {
   private val upperCaseCatcher = Pattern.compile("[A-Z]+").toRegex()
   private val lowerCaseCatcher = Pattern.compile("[a-z]+").toRegex()

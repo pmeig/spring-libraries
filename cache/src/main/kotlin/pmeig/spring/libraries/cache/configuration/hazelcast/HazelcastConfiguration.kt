@@ -7,6 +7,7 @@ import com.hazelcast.core.Hazelcast
 import com.hazelcast.core.HazelcastInstance
 import com.hazelcast.spring.cache.HazelcastCacheManager
 import org.springframework.beans.factory.config.BeanPostProcessor
+import org.springframework.beans.factory.getBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.ApplicationContext
@@ -50,10 +51,10 @@ class HazelcastConfiguration : BeanPostProcessor, ApplicationContextAware {
 
   override fun postProcessAfterInitialization(bean: Any, beanName: String): Any? {
     if (bean is HazelcastInstance) {
-      val cacheHandler = applicationContext.getBean(HazelcastCacheHandler::class.java)
+      val cacheHandler = applicationContext.getBean<HazelcastCacheHandler>()
       cacheHandler.defaultConfig(bean.config)
       val updater = HazelcastConfigUpdater(bean.config)
-      applicationContext.getBean(CacheConfigsProvider::class.java).configs.forEach { cacheConfig ->
+      applicationContext.getBean<CacheConfigsProvider>().configs.forEach { cacheConfig ->
         cacheHandler.config(cacheConfig.name, applyConfig(cacheConfig, updater).config)
       }
     }

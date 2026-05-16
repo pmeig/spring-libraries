@@ -3,11 +3,10 @@ package pmeig.spring.libraries.jpa.data.bigquery.client
 import com.google.cloud.bigquery.QueryJobConfiguration
 import com.google.cloud.bigquery.Schema
 import com.google.cloud.bigquery.TableResult
-import org.springframework.cache.CacheManager
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
-import pmeig.spring.libraries.jpa.core.cache.DataCacheNames
+import pmeig.spring.libraries.jpa.core.cache.DataCacheManager
 import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
 import pmeig.spring.libraries.jpa.core.entity.model.DataMetadata
 import pmeig.spring.libraries.jpa.data.bigquery.BigQueryPage
@@ -17,6 +16,7 @@ import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQuerySqlMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperFactory
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperProvider
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMetadataFactory
+import pmeig.spring.libraries.jpa.data.bigquery.mappers
 import kotlin.reflect.KClass
 
 @Suppress("unused")
@@ -24,7 +24,7 @@ abstract class BigQueryMultiClient(
   private val mapperFactory: BigQueryMapperFactory,
   private val entityAnnotationReader: EntityAnnotationReader,
   private val sqlMapper: BigQuerySqlMapper,
-  protected val cacheManager: CacheManager
+  protected val cacheManager: DataCacheManager
 ) {
 
   abstract fun query(
@@ -135,7 +135,7 @@ abstract class BigQueryMultiClient(
   private fun <T : Any> toEntity(entity: KClass<T>, metadata: DataMetadata = getMetadata(entity), executor: () -> TableResult?) = exec(executor) { tableResult ->
     tableResult.iterateAll().map {
       val newEntity = metadata.createEntity() as T
-      val mappers = DataCacheNames.mappers(cacheManager, metadata) {
+      val mappers = mappers(cacheManager, metadata) {
         createEntityFieldMappers(entity, tableResult, metadata)
       }
       mappers.forEach { (fieldName, mapper) ->
