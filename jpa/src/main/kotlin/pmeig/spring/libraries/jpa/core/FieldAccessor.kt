@@ -1,0 +1,159 @@
+package pmeig.spring.libraries.jpa.core
+
+import pmeig.spring.libraries.jpa.core.converter.configuration.formatter.DateTimeFormatterProvider
+import pmeig.spring.libraries.jpa.core.converter.configuration.zoneId.DataZoneIdProvider
+import java.lang.reflect.Field
+import java.lang.reflect.Method
+import java.lang.reflect.Type
+
+internal var zoneIdProviderInstance: DataZoneIdProvider? = null
+
+@Suppress("unused")
+val ZONE_ID_PROVIDER get() = zoneIdProviderInstance!!
+
+internal var dateTimeFormatterInstance: DateTimeFormatterProvider? = null
+
+val DATE_TIME_FORMATTER_PROVIDER: DateTimeFormatterProvider
+  get() = dateTimeFormatterInstance!!
+
+interface FieldAccessor<T>: FieldGetter<T>, FieldSetter<T> {
+  val struct: Map<String, FieldAccessor<*>>
+}
+
+interface FieldSetter<T> {
+  val declared: Class<*>
+  val java: Class<T>
+  val type: Type
+  fun set(entity: Any?, value: T?)
+}
+
+interface FieldGetter<T> {
+  val declared: Class<*>
+  val java: Class<T>
+  val type: Type
+  fun get(entity: Any?): T?
+}
+
+private fun getMethod(name: String, clazz: Class<*>): Method? = try {
+  if (clazz.typeName == Any::class.java.typeName)
+    null
+  else
+    clazz.getDeclaredMethod(name)
+} catch (_: Throwable) {
+  getMethod(name, clazz.superclass)
+}?.apply { isAccessible = true }
+
+@Suppress("UNCHECKED_CAST")
+internal class MethodGetter<T>(field: Field): FieldGetter<T> {
+  override val declared: Class<*> = field.declaringClass
+  override val java: Class<T> = field.type as Class<T>
+  override val type: Type = field.genericType
+  private val getter: Method? = getMethod("get${field.name[0].uppercaseChar()}${field.name.substring(1)}", field.declaringClass)
+  @Suppress("UNCHECKED_CAST")
+  override fun get(entity: Any?): T? = getter?.invoke(entity) as T?
+  fun isReadable() = getter != null
+}
+
+@Suppress("UNCHECKED_CAST")
+internal class MethodSetter<T>(field: Field): FieldSetter<T> {
+  override val declared: Class<*> = field.declaringClass
+  override val java: Class<T> = field.type as Class<T>
+  override val type: Type = field.genericType
+  private val setter: Method? = getMethod("set${field.name[0].uppercaseChar()}${field.name.substring(1)}", field.declaringClass)
+  override fun set(entity: Any?, value: T?) {
+    setter?.invoke(entity, value)
+  }
+  fun isWritable() = setter != null
+}
+
+@Suppress("UNCHECKED_CAST")
+open class FieldAccessorWrapper<T>(val field: Field,
+                                   override val struct: Map<String, FieldAccessor<*>> = emptyMap()): FieldAccessor<T> {
+  override val declared: Class<*> = field.declaringClass
+  override val java: Class<T> = field.type as Class<T>
+  override val type: Type = field.genericType
+  private var getter: (Any?) -> T?
+  private var setter: (Any?, T?) -> Unit
+
+  init {
+    field.isAccessible = true
+    getter = MethodGetter<T>(field).let { if (it.isReadable()) it::get else { entity: Any? -> field.get(entity) as T? } }
+    setter = MethodSetter<T>(field).let { if(it.isWritable()) it::set else ({ entity: Any?, value: T? -> field.set(entity, value)}) }
+  }
+  override fun get(entity: Any?): T? = getter(entity)
+  override fun set(entity: Any?, value: T?) = setter(entity, value)
+  override fun toString(): String {
+    return "FieldAccessorWrapper(struct=$struct, declared=$declared, java=$java, type=$type)"
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as FieldAccessorWrapper<*>
+
+    if (struct != other.struct) return false
+    if (declared != other.declared) return false
+    if (java != other.java) return false
+    if (type != other.type) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = struct.hashCode()
+    result = 31 * result + declared.hashCode()
+    result = 31 * result + java.hashCode()
+    result = 31 * result + type.hashCode()
+    return result
+  }
+
+
+}
+
+@Suppress("UNCHECKED_CAST")
+class ParentFieldAccessor<T>(private val parent: Field, private val child: FieldAccessor<T>, struct: Map<String, FieldAccessor<*>> = emptyMap()):
+  FieldAccessorWrapper<T>(parent, struct) {
+  override fun get(entity: Any?): T? = getParent(entity)?.let { child.get(it) }
+  override fun set(entity: Any?, value: T?){
+    getParent(entity)?.let { child.set(it, value) }
+  }
+
+  override val declared: Class<*> = child.declared
+  override val java: Class<T> = child.java
+  override val type: Type = child.type
+
+  private fun getParent(entity: Any?): Any? {
+    return entity?.let {
+      var parentValue = super.get(it) as Any?
+      if (null == parentValue) {
+        parentValue = parent.type.declaredConstructors.find { constructor -> constructor.parameterCount == 0 }?.newInstance()?.apply {
+          super.set(entity, parentValue)
+        }
+      }
+      parentValue
+    }
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+    if (!super.equals(other)) return false
+
+    other as ParentFieldAccessor<*>
+
+    if (parent != other.parent) return false
+    if (child != other.child) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = super.hashCode()
+    result = 31 * result + parent.hashCode()
+    result = 31 * result + child.hashCode()
+    return result
+  }
+
+
+}
