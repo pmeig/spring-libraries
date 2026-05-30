@@ -124,7 +124,7 @@ class BigQueryClient(
     sql: String,
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
   ) =
-    tryEntity(entityRef, sql, toBatch(configurator))
+    tryEntity(entityRef.kotlin, sql, toBatch(configurator))
 
   @JvmOverloads
   fun <T : Any> tryBatchEntity(
@@ -140,7 +140,7 @@ class BigQueryClient(
     sql: String,
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
   ) =
-    entity(entityRef, sql, toBatch(configurator))
+    entity(entityRef.kotlin, sql, toBatch(configurator))
 
   @JvmOverloads
   fun <T : Any> batchEntity(

@@ -22,13 +22,15 @@ import pmeig.spring.libraries.jpa.core.converter.specification.SpecificationRead
 import pmeig.spring.libraries.jpa.core.converter.specification.model.SpecificationContext
 import pmeig.spring.libraries.jpa.core.converter.specification.model.SpecificationParameter
 import pmeig.spring.libraries.jpa.core.createSqlPage
+import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
 import pmeig.spring.libraries.jpa.core.entity.model.DataMetadata
 import pmeig.spring.libraries.jpa.data.bigquery.client.BigQueryClient
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQueryFieldMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mappers
-import pmeig.spring.libraries.jpa.data.bigquery.registrar.JpaMethodInvoker
-import pmeig.spring.libraries.jpa.data.bigquery.registrar.JpaMethodInvokerResult
+import pmeig.spring.libraries.jpa.core.executor.JpaMethodInvoker
+import pmeig.spring.libraries.jpa.core.executor.JpaMethodInvokerResult
 import java.lang.reflect.Method
+import java.lang.reflect.Type
 import java.time.Clock
 import java.time.Instant
 import java.util.Optional
@@ -37,18 +39,21 @@ import java.util.function.Function
 typealias ID = Any
 typealias Entity = Any
 
+@Suppress("SpringDataMethodInconsistencyInspection")
 class SimpleJpaBigQueryRepository(
   private val client: BigQueryClient,
-  private val metadata: DataMetadata,
   private val cacheManager: DataCacheManager,
+  entityAnnotationReader: EntityAnnotationReader,
+  clazz: Class<Entity>
 ): JpaRepository<Entity, ID>, JpaSpecificationExecutor<Entity>, JpaMethodInvoker {
 
+  private val metadata: DataMetadata = entityAnnotationReader.metadata(clazz)
   @Suppress("UNCHECKED_CAST")
   private val specificationReader = SpecificationReader(metadata.reference as Class<Entity>)
 
-  private val idColumns = metadata.primary.fromID.keys.joinToString(" || '_' || ")
+  private val idColumns = metadata.primary.fromID.ifEmpty { metadata.primary.fromEntityColumns }.keys.joinToString(" || '_' || ")
   private val idToString: (ID) -> String = {
-    metadata.primary.fromID.keys.joinToString("_") { column ->
+    metadata.primary.fromID.ifEmpty { metadata.primary.fromEntityColumns }.keys.joinToString("_") { column ->
       metadata.primary.getID(it, column).toString()
     }
   }
@@ -62,14 +67,14 @@ class SimpleJpaBigQueryRepository(
     get() {
       if (field.isEmpty()) {
         field = mappers(cacheManager, metadata) {
-          client.tryEntity(metadata.reference, "SELECT * FROM ${metadata.table}") { it.setMaxResults(1) }
+          client.tryEntity(metadata.reference.kotlin, "SELECT * FROM ${metadata.table}") { it.setMaxResults(1) }
           mappers(cacheManager, metadata) { emptyMap() }
         }
       }
       return field
     }
 
-  override fun invokeMethod(method: Method, args: Array<Any?>) = try {
+  override fun invokeMethod(method: Method, returnType: Type, args: Array<Any?>) = try {
     SimpleJpaBigQueryRepository::class.java.getDeclaredMethod(method.name, *method.parameterTypes)
     JpaMethodInvokerResult(method.invoke(this, *args))
   } catch (_: NoSuchMethodException) {
@@ -166,8 +171,8 @@ class SimpleJpaBigQueryRepository(
   }
 
   override fun <S: Entity> save(entity: S): S {
-    val query = createQueryUpsert("SELECT ${metadata.columns.keys.joinToString(",") { "@$it as $it" }}")
-    return client.tryEntity(entity.javaClass, query) {
+    val query = createQueryUpsert("SELECT ${metadata.columns.all.keys.joinToString(",") { "@$it as $it" }}")
+    return client.tryEntity(entity.javaClass.kotlin, query) {
       mappers.entries.forEach { (name, mapper) ->
         it.addNamedParameter(name, mapper.parameter(entity))
       }
@@ -177,7 +182,7 @@ class SimpleJpaBigQueryRepository(
 
   override fun findById(id: ID): Optional<in Entity> = Optional.ofNullable(
     client.tryEntity(
-      metadata.reference,
+      metadata.reference.kotlin,
       "SELECT * FROM ${metadata.table} WHERE $idColumns = @id"
     ) {
       it.addNamedParameter("id", QueryParameterValue.string(idToString(id)))
@@ -238,7 +243,7 @@ class SimpleJpaBigQueryRepository(
   @Suppress("UNCHECKED_CAST")
   override fun <S: Entity> findOne(example: Example<S>): Optional<S> = Optional
     .ofNullable(fromExample(example).let {
-      client.tryEntity(example.probeType, it.sql) { builder ->
+      client.tryEntity(example.probeType.kotlin, it.sql) { builder ->
         applyExampleParameters(it.parameters, builder.setMaxResults(1))
       }
     })
@@ -277,7 +282,7 @@ class SimpleJpaBigQueryRepository(
     sort: Sort
   ): List<Entity> {
     return fromSpecification(spec).let {
-      client.tryEntity(metadata.reference, addOrder(it.sql, sort)) { builder ->
+      client.tryEntity(metadata.reference.kotlin, addOrder(it.sql, sort)) { builder ->
         applyExampleParameters(it.parameters, builder)
       } as List<Entity>
     }
@@ -298,7 +303,7 @@ class SimpleJpaBigQueryRepository(
 
   override fun findOne(spec: Specification<Entity>): Optional<Entity> {
     return fromSpecification(spec).let {
-      Optional.ofNullable(client.tryEntity(metadata.reference, it.sql))
+      Optional.ofNullable(client.tryEntity(metadata.reference.kotlin, it.sql))
     }
   }
 
@@ -338,11 +343,11 @@ class SimpleJpaBigQueryRepository(
       USING ($using) AS source
       ON target.id = source.id
       WHEN MATCHED THEN
-          UPDATE SET ${metadata.columns.keys.joinToString(",") { "target.$it = source.$it" }}
+          UPDATE SET ${metadata.columns.updated.keys.joinToString(",") { "target.$it = source.$it" }}
           THEN RETURN *
       WHEN NOT MATCHED THEN
-          INSERT (${metadata.columns.keys.joinToString(",")})
-          VALUES (${metadata.columns.keys.joinToString(",") { "source.$it" }})
+          INSERT (${metadata.columns.all.keys.joinToString(",")})
+          VALUES (${metadata.columns.all.keys.joinToString(",") { "source.$it" }})
           THEN RETURN *
       """
 
@@ -378,10 +383,10 @@ class SimpleJpaBigQueryRepository(
   private fun <S: Entity> insertTmpTable(entities: List<S>, tableName: String) {
     var index = 0
     val insertEntities = """
-      INSERT INTO $tableName (${metadata.columns.keys.joinToString(",")})
+      INSERT INTO $tableName (${metadata.columns.all.keys.joinToString(",")})
       VALUES ${
       entities.joinToString(",") {
-        val value = "( ${metadata.columns.keys.joinToString(",") { "@$it$index" }} ) "
+        val value = "( ${metadata.columns.all.keys.joinToString(",") { "@$it$index" }} ) "
         index++
         value
       }
@@ -401,7 +406,7 @@ class SimpleJpaBigQueryRepository(
     val tableName = "`${metadata.table}_${Instant.now(Clock.systemUTC()).toEpochMilli()}`"
     val createTableQuery = """
       CREATE TEMP TABLE $tableName  AS 
-      (SELECT ${metadata.columns.keys.joinToString(",") { "@$it as $it" }})
+      (SELECT ${metadata.columns.all.keys.joinToString(",") { "@$it as $it" }})
     """
     client.tryQuery(createTableQuery) {
       mappers.entries.forEach { (name, mapper) ->

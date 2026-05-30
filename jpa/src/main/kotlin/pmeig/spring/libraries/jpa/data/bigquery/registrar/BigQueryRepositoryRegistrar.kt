@@ -1,40 +1,92 @@
 package pmeig.spring.libraries.jpa.data.bigquery.registrar
 
-import org.springframework.beans.factory.config.BeanDefinition
-import org.springframework.beans.factory.config.BeanFactoryPostProcessor
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
-import org.springframework.beans.factory.getBeanNamesForAnnotation
-import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.context.EnvironmentAware
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.env.Environment
-import org.springframework.core.type.filter.AnnotationTypeFilter
+import org.springframework.beans.factory.support.BeanDefinitionBuilder
+import pmeig.spring.libraries.jpa.core.registrar.DataJpaRepositorySupportRegistrar
+import pmeig.spring.libraries.jpa.core.registrar.DataRegistrarBeanDefinitionName
 import pmeig.spring.libraries.jpa.data.bigquery.annotation.BigQueryRepository
+import pmeig.spring.libraries.jpa.data.bigquery.client.BigQueryClient
+import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperFactory
+import pmeig.spring.libraries.jpa.data.bigquery.registrar.repository.MethodNameBigQueryJpaRepository
+import pmeig.spring.libraries.jpa.data.bigquery.registrar.repository.SimpleJpaBigQueryRepository
+import pmeig.spring.libraries.jpa.data.bigquery.registrar.repository.query.QueryJpaBigQueryRepository
 
-@Configuration
-class BigQueryRepositoryRegistrar: BeanFactoryPostProcessor, EnvironmentAware {
-  private lateinit var environment: Environment
+private const val SUFFIX_SIMPLE_JPA = "SimpleJpaBigQueryRepository"
+private const val SUFFIX_QUERY = "QueryJpaBigQueryRepository"
+private const val SUFFIX_METHOD = "MethodNameBigQueryJpaRepository"
 
-  override fun postProcessBeanFactory(beanFactory: ConfigurableListableBeanFactory) {
-    val packageName = beanFactory.getBeanNamesForAnnotation<SpringBootApplication>().firstOrNull()?.let {
-      val classname = beanFactory.getBeanDefinition(it).beanClassName ?: ""
-      classname.substringBeforeLast(".")
-    } ?: ""
-    val bigQueryRepositories = retrieveBigQueryRepositories(packageName)
-    bigQueryRepositories.forEach { beanDefinition ->
+class BigQueryRepositoryRegistrar: DataJpaRepositorySupportRegistrar<BigQueryBeanDefinitionRequired>() {
 
-    }
-
+  override fun loadBeanDefinitionName(beanFactory: ConfigurableListableBeanFactory): BigQueryBeanDefinitionRequired? {
+    return BigQueryBeanDefinitionRequired(
+      beanFactory.getBeanNamesForType(BigQueryClient::class.java).first(),
+      beanFactory.getBeanNamesForType(BigQueryMapperFactory::class.java).first()
+    )
   }
 
-  private fun retrieveBigQueryRepositories(packageName: String): Set<BeanDefinition> {
-    val scanner = ClassPathScanningCandidateComponentProvider(true, environment)
-    scanner.addIncludeFilter(AnnotationTypeFilter(BigQueryRepository::class.java))
-    return scanner.findCandidateComponents(packageName)
+  override fun annotationScan() = BigQueryRepository::class
+
+  override fun registrarJpaMethodInvoker(
+    beanFactory: ConfigurableListableBeanFactory,
+    repository: Class<*>,
+    entityClass: Class<*>,
+    registrarBeanDefinitionName: DataRegistrarBeanDefinitionName<BigQueryBeanDefinitionRequired>
+  ): List<Pair<String, BeanDefinitionBuilder>> = mutableListOf(
+    createSimpleJpaBigQueryRepositoryBeanDefinition(
+      registrarBeanDefinitionName,
+      entityClass,
+      repository.typeName
+    ),
+    createQueryBigQueryBeanDefinition(
+      registrarBeanDefinitionName,
+      repository.typeName
+    )
+  ).apply {
+    add(createMethodBigQueryBeanDefinition(
+      get(0).first,
+      registrarBeanDefinitionName.dataContextServiceBeanName,
+      repository.typeName
+    ))
   }
 
-  override fun setEnvironment(environment: Environment) {
-    this.environment = environment
+  private fun createMethodBigQueryBeanDefinition(
+    nameSimpleJpaRepository: String,
+    dataContextServiceName: String,
+    repositoryName: String
+  ): Pair<String, BeanDefinitionBuilder> {
+    val methodNameInvoker = BeanDefinitionBuilder.rootBeanDefinition(MethodNameBigQueryJpaRepository::class.java)
+      .addConstructorArgReference(nameSimpleJpaRepository)
+      .addConstructorArgReference(dataContextServiceName)
+
+    val nameMethodNameInvoker = repositoryName + SUFFIX_METHOD
+    return Pair(nameMethodNameInvoker, methodNameInvoker)
+  }
+
+  private fun createQueryBigQueryBeanDefinition(
+    registrarBeanDefinitionName: DataRegistrarBeanDefinitionName<BigQueryBeanDefinitionRequired>,
+    repositoryName: String
+  ): Pair<String, BeanDefinitionBuilder> {
+    val queryJpaMethodInvoker = BeanDefinitionBuilder.rootBeanDefinition(QueryJpaBigQueryRepository::class.java)
+      .addConstructorArgReference(registrarBeanDefinitionName.loadBeanDefinitionName!!.client)
+      .addConstructorArgReference(registrarBeanDefinitionName.cacheManagerBeanName)
+      .addConstructorArgReference(registrarBeanDefinitionName.dataContextServiceBeanName)
+      .addConstructorArgReference(registrarBeanDefinitionName.loadBeanDefinitionName.mapper)
+
+    val nameQueryJpaMethodInvoker = repositoryName + SUFFIX_QUERY
+    return Pair(nameQueryJpaMethodInvoker, queryJpaMethodInvoker)
+  }
+
+  private fun createSimpleJpaBigQueryRepositoryBeanDefinition(
+    beanDefinitionsName: DataRegistrarBeanDefinitionName<BigQueryBeanDefinitionRequired>,
+    entityClass: Class<*>,
+    repositoryName: String
+  ): Pair<String, BeanDefinitionBuilder> {
+    val jpaRepositoryMethodInvoker = BeanDefinitionBuilder.rootBeanDefinition(SimpleJpaBigQueryRepository::class.java)
+      .addConstructorArgReference(beanDefinitionsName.loadBeanDefinitionName!!.client)
+      .addConstructorArgReference(beanDefinitionsName.cacheManagerBeanName)
+      .addConstructorArgReference(beanDefinitionsName.entityAnnotationReaderBeanName)
+      .addConstructorArgValue(entityClass)
+    val nameJpaRepositoryMethodInvoker = repositoryName + SUFFIX_SIMPLE_JPA
+    return Pair(nameJpaRepositoryMethodInvoker, jpaRepositoryMethodInvoker)
   }
 }

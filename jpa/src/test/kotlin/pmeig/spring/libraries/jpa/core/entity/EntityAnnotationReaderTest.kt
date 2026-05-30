@@ -18,12 +18,7 @@ class EntityAnnotationReaderTest {
     whenever(cacheManager.getCache(DataCacheNames.METADATA)).thenReturn(null)
 
     expect(entityTestMetadata_expected()) {
-      entityAnnotationReader.metadata(EntityTest::class).apply {
-        println(columns["struct"]?.struct)
-        entityTestMetadata_expected().columns.forEach { (name, accessor) ->
-          println(name + ": " + (accessor == columns[name]))
-        }
-      }
+      entityAnnotationReader.metadata(EntityTest::class)
     }
   }
 }

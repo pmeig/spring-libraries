@@ -8,6 +8,7 @@ import java.lang.reflect.Type
 
 internal var zoneIdProviderInstance: DataZoneIdProvider? = null
 
+@Suppress("unused")
 val ZONE_ID_PROVIDER get() = zoneIdProviderInstance!!
 
 internal var dateTimeFormatterInstance: DateTimeFormatterProvider? = null
@@ -66,7 +67,7 @@ internal class MethodSetter<T>(field: Field): FieldSetter<T> {
 }
 
 @Suppress("UNCHECKED_CAST")
-open class FieldAccessorWrapper<T>(field: Field,
+open class FieldAccessorWrapper<T>(val field: Field,
                                    override val struct: Map<String, FieldAccessor<*>> = emptyMap()): FieldAccessor<T> {
   override val declared: Class<*> = field.declaringClass
   override val java: Class<T> = field.type as Class<T>

@@ -23,13 +23,6 @@ abstract class BigQueryClientSimple(
   fun <T: Any> trySingle(target: KClass<T>, sql: String, configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }) =
     tryMultiple(target, sql, configurator).firstOrNull()
 
-  @JvmOverloads
-  fun <T : Any> tryEntity(
-    entityRef: Class<T>,
-    sql: String,
-    configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
-  ) =
-    tryEntity(entityRef.kotlin, sql, configurator)
 
   @JvmOverloads
   fun <T : Any> tryEntity(
@@ -38,14 +31,6 @@ abstract class BigQueryClientSimple(
     configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
   ) =
     tryEntities(entityRef, sql, configurator).firstOrNull()
-
-  @JvmOverloads
-  fun <T : Any> entity(
-    entityRef: Class<T>,
-    sql: String,
-    configurator: (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder = { it }
-  ) =
-    entity(entityRef.kotlin, sql, configurator)
 
   fun <T : Any> entity(
     entityRef: KClass<T>,

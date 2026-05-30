@@ -1,4 +1,4 @@
-package pmeig.spring.libraries.jpa.core.converter
+package pmeig.spring.libraries.jpa.core.converter.attribute
 
 import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Converter

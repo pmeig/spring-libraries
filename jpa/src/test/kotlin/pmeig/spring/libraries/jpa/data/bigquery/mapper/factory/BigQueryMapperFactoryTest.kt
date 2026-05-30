@@ -2,8 +2,13 @@ package pmeig.spring.libraries.jpa.data.bigquery.mapper.factory
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.cloud.bigquery.StandardSQLTypeName
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
+import org.springframework.cache.support.NoOpCache
+import pmeig.spring.libraries.jpa.core.cache.DataCacheManager
 import pmeig.spring.libraries.jpa.shared.expected.arrayMetadataFactory_expected
 import pmeig.spring.libraries.jpa.shared.expected.generateArrayAccessor
 import pmeig.spring.libraries.jpa.shared.expected.generateStructAccessor
@@ -22,7 +27,13 @@ import kotlin.test.expect
 class BigQueryMapperFactoryTest {
 
   private val jsonMapper = mock<ObjectMapper>()
-  private val bigQueryMapperFactory = BigQueryMapperFactory(jsonMapper)
+  private val cacheManager = mock<DataCacheManager>()
+  private val bigQueryMapperFactory = BigQueryMapperFactory(jsonMapper, cacheManager)
+
+  @BeforeEach
+  fun setUp() {
+    whenever(cacheManager.getCache(any())).thenReturn(NoOpCache("noOpCache"))
+  }
 
   @Test
   fun fromSchema() {

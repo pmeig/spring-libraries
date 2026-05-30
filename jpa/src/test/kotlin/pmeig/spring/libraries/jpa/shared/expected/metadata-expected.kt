@@ -4,6 +4,7 @@ import pmeig.spring.libraries.jpa.core.FieldAccessor
 import pmeig.spring.libraries.jpa.core.FieldAccessorWrapper
 import pmeig.spring.libraries.jpa.core.ParentFieldAccessor
 import pmeig.spring.libraries.jpa.core.column.id.auto.AutoIdStateColumns
+import pmeig.spring.libraries.jpa.core.entity.model.DataColumns
 import pmeig.spring.libraries.jpa.core.entity.model.DataMetadata
 import pmeig.spring.libraries.jpa.core.entity.model.DataPrimaryMetadata
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMetadataFactory
@@ -20,11 +21,14 @@ private val cache = mutableMapOf<String, Any>()
 fun entityTestMetadata_expected() = getCache(ENTITY_TEST_METADATA) {
   val clazz = EntityTest::class.javaObjectType
   val constructor = clazz.declaredConstructors.find { it.parameterCount == 0 }!!
+  val columns = generateEntityTestColumn(clazz)
   DataMetadata(
-    "entity_test",
+    "`entity_test`",
     generateEntityTestDataPrimary(),
     EntityTest::class.javaObjectType,
-    generateEntityTestColumn(clazz)
+    DataColumns(columns, columns.filter {
+      !listOf("created_by", "created").contains(it.key)
+    })
   ) {
     constructor.newInstance()
   }

@@ -154,7 +154,7 @@ abstract class BigQueryMultiClient(
   ): Map<String, BigQueryFieldMapper<*>> {
     val schema = tableResult.schema ?: return emptyMap()
     return schema.fields.associate {
-      val accessor = metadata.columns[it.name]!!
+      val accessor = metadata.columns.all[it.name]!!
       it.name to BigQueryFieldMapper(
         accessor,
         mapperFactory.factory(schema.fields.get(it.name), mapperFactory.toMetadataFactory(accessor))

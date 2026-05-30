@@ -1,6 +1,25 @@
 package pmeig.spring.libraries.jpa.core.entity.model
 
 import pmeig.spring.libraries.jpa.core.FieldAccessor
+import java.lang.reflect.Type
+
+private class SameFieldAccessor: FieldAccessor<Any> {
+  override val declared: Class<*>
+    get() = Any::class.java
+  override val java: Class<Any>
+    get() = Any::class.java
+  override val type: Type
+    get() = java
+
+  override fun set(entity: Any?, value: Any?) {
+  }
+
+  override fun get(entity: Any?) = entity
+  override val struct: Map<String, FieldAccessor<*>>
+    get() = emptyMap()
+}
+
+private val sameFieldAccessor = SameFieldAccessor()
 
 data class DataPrimaryMetadata(
   val field: FieldAccessor<Any>? = null,
@@ -9,7 +28,7 @@ data class DataPrimaryMetadata(
   val embedded: Boolean = false
 ) {
   fun get(entity: Any?, column: String) = fromEntityColumns[column]?.get(entity)
-  fun getID(id: Any?, column: String) = fromID[column]?.get(id)
+  fun getID(id: Any?, column: String) = fromID.ifEmpty { mapOf(column to sameFieldAccessor) }[column]?.get(id)
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true

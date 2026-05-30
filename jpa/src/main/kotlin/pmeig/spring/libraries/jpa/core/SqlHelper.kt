@@ -21,7 +21,7 @@ fun createDefaultSort(dataMetadata: DataMetadata, sort: Sort): Sort {
   if (sort.isSorted) {
     return sort
   }
-  if (dataMetadata.columns.keys.contains("created_at")) {
+  if (dataMetadata.columns.all.keys.contains("created_at")) {
     return Sort.by(Sort.Direction.DESC, "created_at")
   }
   return Sort.by(*dataMetadata.primary.fromEntityColumns.keys.toTypedArray())

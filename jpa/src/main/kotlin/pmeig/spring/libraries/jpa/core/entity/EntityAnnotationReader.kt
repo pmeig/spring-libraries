@@ -7,6 +7,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.MappedSuperclass
 import jakarta.persistence.Table
 import org.springframework.core.annotation.AnnotatedElementUtils
+import org.springframework.data.annotation.CreatedBy
+import org.springframework.data.annotation.CreatedDate
 import org.springframework.stereotype.Service
 import org.springframework.util.ClassUtils
 import pmeig.spring.libraries.jpa.core.FieldAccessor
@@ -15,6 +17,7 @@ import pmeig.spring.libraries.jpa.core.ParentFieldAccessor
 import pmeig.spring.libraries.jpa.core.annotation.Struct
 import pmeig.spring.libraries.jpa.core.cache.DataCacheManager
 import pmeig.spring.libraries.jpa.core.cache.DataCacheNames
+import pmeig.spring.libraries.jpa.core.entity.model.DataColumns
 import pmeig.spring.libraries.jpa.core.entity.model.DataMetadata
 import pmeig.spring.libraries.jpa.core.entity.model.DataPrimaryMetadata
 import java.lang.reflect.Field
@@ -37,7 +40,7 @@ class EntityAnnotationReader(
   @Suppress("UNCHECKED_CAST")
   fun metadata(type: Class<*>) = DataCacheNames.useCache(
     cacheManager, DataCacheNames.METADATA,
-    type.typeName, DataMetadata::class.java
+    type.typeName, DataMetadata::class
   ) {
     if (!AnnotatedElementUtils.hasAnnotation(type, Entity::class.java)) {
       error("The class $type is not an entity")
@@ -49,13 +52,17 @@ class EntityAnnotationReader(
           null
         } ?: toSnakeCase(type.simpleName))
     val tableName = fragmentsTableName.joinToString(".")
-    val (columns, primaryKey) = extractColumns(type)
+    val (columns, primaryKey) = extractColumns(type) as Pair<Map<String, FieldAccessor<Any>>, DataPrimaryMetadata?>
     val constructor = type.declaredConstructors.find { it.parameterCount == 0 }
       ?: error("No default constructor found for entity $type")
     DataMetadata(
       "`$tableName`", primaryKey ?: error("No primary key found for entity $type"),
       type,
-      columns as Map<String, FieldAccessor<Any>>
+      DataColumns(columns, columns
+        .filter {
+          !AnnotatedElementUtils.hasAnnotation((it.value as FieldAccessorWrapper<Any>).field, CreatedDate::class.java)
+                  && !AnnotatedElementUtils.hasAnnotation((it.value as FieldAccessorWrapper<Any>).field, CreatedBy::class.java)
+        })
     ) {
       constructor.newInstance()
     }
@@ -65,7 +72,7 @@ class EntityAnnotationReader(
   fun extractColumns(
     type: Class<*>
   ): Pair<Map<String, FieldAccessor<*>>, DataPrimaryMetadata?> =
-    DataCacheNames.useCache(cacheManager, DataCacheNames.COLUMNS, type.typeName, Pair::class.java) {
+    DataCacheNames.useCache(cacheManager, DataCacheNames.COLUMNS, type.typeName, Pair::class) {
       if (type == Any::class.java) return@useCache Pair(emptyMap<String, FieldAccessor<*>>(), DataPrimaryMetadata())
       if (listOf(MappedSuperclass::class.java, Entity::class.java).none {
           AnnotatedElementUtils.hasAnnotation(
@@ -120,15 +127,19 @@ class EntityAnnotationReader(
     columnName: String,
     isEmbedded: Boolean
   ): Pair<List<Pair<String, FieldAccessorWrapper<Any>>>, DataPrimaryMetadata?> {
-    val embeddedColumns = if (isEmbedded) extractColumns(field.type).first else mapOf(
+    var embeddedColumns = if (isEmbedded) extractColumns(field.type).first else mapOf(
       columnName to FieldAccessorWrapper<Any>(field)
     )
     val fromEntityColumns = if (isEmbedded) embeddedColumns.map { Pair(it.key, ParentFieldAccessor(field, it.value)) }
             as List<Pair<String, FieldAccessorWrapper<Any>>>
-    else listOf()
+    else {
+      val fromEntity = embeddedColumns.toList() as List<Pair<String, FieldAccessorWrapper<Any>>>
+      embeddedColumns = emptyMap()
+      fromEntity
+    }
     val dataPrimaryMetadata = DataPrimaryMetadata(
       FieldAccessorWrapper(field),
-      fromEntityColumns.toMap(),
+      fromEntityColumns.toMap() as Map<String, FieldAccessor<Any>>,
       embeddedColumns as Map<String, FieldAccessor<Any>>,
       isEmbedded
     )

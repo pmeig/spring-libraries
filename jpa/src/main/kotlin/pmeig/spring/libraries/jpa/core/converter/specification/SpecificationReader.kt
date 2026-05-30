@@ -42,6 +42,7 @@ private var metadataBuilder = StandardServiceRegistryBuilder()
   .applySetting("hibernate.boot.allow_jdbc_metadata_access", "false")
   .applySetting("hibernate.show_sql", "false")
   .applySetting("hibernate.log_session_metrics", "false")
+  .applySetting("hibernate.resource.beans.cdi.extensions", "false")
   .build().let { MetadataSources(it) }
 
 private var factory = metadataBuilder.buildMetadata().buildSessionFactory()

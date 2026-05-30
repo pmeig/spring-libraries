@@ -29,7 +29,7 @@ private fun arrayParameterConverter(value: Any?): QueryParameterValue? {
 
 private class BigQueryJsonMapper(private val jsonMapper: ObjectMapper) : BigQueryMapper<Map<String, Any?>> {
   override fun map(value: FieldValue?): Map<String, Any?>? =
-    value?.stringValue?.let { jsonMapper.convertValue(it, object : TypeReference<Map<String, Any?>>() {}) }
+    value?.stringValue?.let { jsonMapper.convertValue(it, object:TypeReference<Map<String, Any?>>() {}) }
 
   override fun parameter(value: Any?): QueryParameterValue? = if (value is JsonObject) QueryParameterValue.json(value)
   else value?.let { QueryParameterValue.json(jsonMapper.writeValueAsString(it)) }
