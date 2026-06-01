@@ -39,7 +39,7 @@ class DataContextService(
       MethodContext::class) {
       val isCollection = checkIsCollection(returnType)
       MethodContext(constructParameterContexts(method),
-        returnType.typeName.startsWith(String::class.qualifiedName!!)
+        returnType.typeName.startsWith(String::class.javaObjectType.typeName)
                 && method.name.endsWith("toJson", ignoreCase = true),
         checkIsMap(returnType, isCollection),
         method.name.startsWith("batch", ignoreCase = true),

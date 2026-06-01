@@ -1,5 +1,6 @@
 package pmeig.spring.libraries.jpa.core.auditing
 
+import tools.jackson.core.type.TypeReference
 import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
@@ -58,7 +59,7 @@ class AuditingManager(
 
   @Suppress("UNCHECKED_CAST")
   fun applyAuditing(entity: Any) = (DataCacheNames.useCache(cacheManager, DataCacheNames.AUDITING, "combine::${entity.javaClass.typeName}",
-    DataCacheNames.toTargetReference<Function<Any, Boolean>>()) {
+    object: TypeReference<Function<Any, Boolean>>() {}) {
     var combine: Function<Any, Boolean> = { false }
     val createDate = applyCreatedDate(entity)
     if (createDate) {
@@ -108,7 +109,7 @@ class AuditingManager(
   @Suppress("UNCHECKED_CAST")
   private fun fromCache(entity: Any, annotation: KClass<out Annotation>, compute: (FieldAccessor<Any>) -> Function<Any, Boolean>): Function<Any, Boolean> =
     DataCacheNames.useCache(cacheManager, DataCacheNames.AUDITING, "${annotation.simpleName}::${entity.javaClass.typeName}",
-      DataCacheNames.toTargetReference<Function<Any, Boolean>>()) {
+      object: TypeReference<Function<Any, Boolean>>() {}) {
       val fieldAccessor = extractFieldWithAnnotation(entity.javaClass, annotation.java) ?: return@useCache { false } as Function<Any, Boolean>
       compute(fieldAccessor)
     }

@@ -37,9 +37,6 @@ interface DataCacheNames {
       return byCache(cacheManager, name, key, target.java as Class<Any>, compute) as T
     }
 
-    @JvmStatic
-    fun <T : Any> toTargetReference() = object: TypeReference<T>() {}
-
     private fun byCache(cacheManager: DataCacheManager, name: String,
                           key: String, target: Class<Any>, compute: () -> Any): Any {
       var cached = cacheManager.getCache(name)?.get(key, target)
