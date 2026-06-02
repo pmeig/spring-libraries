@@ -3,13 +3,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
-        <groupId>pmeig.spring.libraries</groupId>
-        <artifactId>spring-parent</artifactId>
+        <groupId>io.github.pmeig</groupId>
+        <artifactId>spring-libraries</artifactId>
         <version>1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>security</artifactId>
+    <artifactId>spring-security</artifactId>
     <version>1.0.0-SNAPSHOT</version>
+
+    <name>spring-libraries</name>
+    <description>expose custom annotation simplify secure and expose endpoint</description>
 
     <properties>
         <jwt.version>0.13.0</jwt.version>

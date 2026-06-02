@@ -4,13 +4,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>pmeig.spring.libraries</groupId>
-        <artifactId>spring-parent</artifactId>
+        <groupId>io.github.pmeig</groupId>
+        <artifactId>spring-libraries</artifactId>
         <version>1.0.0</version>
     </parent>
 
-    <artifactId>logger</artifactId>
+    <artifactId>spring-logger</artifactId>
     <version>1.0.0-SNAPSHOT</version>
+
+    <name>spring-logger</name>
+    <description>expose correlation in logger and use spring integration to expose all log in your application by channel logChannel</description>
 
     <dependencies>
         <dependency>

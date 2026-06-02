@@ -40,28 +40,28 @@
     </properties>
     <dependencies>
         <dependency>
-            <groupId>pmeig.spring.libraries</groupId>
-            <artifactId>logger</artifactId>
+            <groupId>io.github.pmeig</groupId>
+            <artifactId>spring-logger</artifactId>
             <version>${pmeig-logger.version}</version>
         </dependency>
         <dependency>
-            <groupId>pmeig.spring.libraries</groupId>
-            <artifactId>swagger</artifactId>
+            <groupId>io.github.pmeig</groupId>
+            <artifactId>spring-swagger</artifactId>
             <version>${pmeig-swagger.version}</version>
         </dependency>
         <dependency>
-            <groupId>pmeig.spring.libraries</groupId>
-            <artifactId>cache</artifactId>
+            <groupId>io.github.pmeig</groupId>
+            <artifactId>spring-cache</artifactId>
             <version>${pmeig-cache.version}</version>
         </dependency>
 <!--        <dependency>-->
-<!--            <groupId>pmeig.spring.libraries</groupId>-->
-<!--            <artifactId>security</artifactId>-->
+<!--            <groupId>io.github.pmeig</groupId>-->
+<!--            <artifactId>spring-security</artifactId>-->
 <!--            <version>${pmeig-security.version}</version>-->
 <!--        </dependency>-->
         <dependency>
-            <groupId>pmeig.spring.libraries</groupId>
-            <artifactId>error</artifactId>
+            <groupId>io.github.pmeig</groupId>
+            <artifactId>spring-error</artifactId>
             <version>${pmeig-error.version}</version>
         </dependency>
         <dependency>

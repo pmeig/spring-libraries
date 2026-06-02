@@ -11,10 +11,14 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>pmeig.spring.libraries</groupId>
-    <artifactId>spring-parent</artifactId>
+    <groupId>io.github.pmeig</groupId>
+    <artifactId>spring-libraries</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
+
+    <name>spring-libraries</name>
+    <description>Spring utility libraries by pmeig</description>
+    <url>https://github.com/pmeig/spring-libraries</url>
 
     <contributors>
         <contributor>
@@ -37,6 +41,19 @@
             <email>pierrick.workspace@gmail.com</email>
         </developer>
     </developers>
+
+    <licenses>
+        <license>
+            <name>Mozilla Public License 2.0</name>
+            <url>https://www.mozilla.org/en-US/MPL/2.0/</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:git://github.com/pmeig/spring-libraries.git</connection>
+        <developerConnection>scm:git:ssh://github.com/pmeig/spring-libraries.git</developerConnection>
+        <url>https://github.com/pmeig/spring-libraries</url>
+    </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -75,7 +92,7 @@
             </properties>
         </profile>
         <profile>
-            <id>source</id>
+            <id>release</id>
             <properties>
                 <kotlin.test.skip>true</kotlin.test.skip>
             </properties>
@@ -175,7 +192,7 @@
                             <id>attach-sources</id>
                             <phase>verify</phase>
                             <goals>
-                                <goal>jar</goal>
+                                <goal>jar-no-fork</goal>
                             </goals>
                         </execution>
                     </executions>
