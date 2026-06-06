@@ -7,7 +7,7 @@ import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Component
 import pmeig.spring.libraries.logger.correlation.correlationId
 import pmeig.spring.libraries.security.core.filter.SecurityAuthenticationProvider
-import pmeig.spring.libraries.security.core.models.api.ApiRequest
+import pmeig.spring.libraries.security.core.model.api.ApiRequest
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)

@@ -11,7 +11,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import pmeig.spring.libraries.security.core.SecurityHandler
-import pmeig.spring.libraries.security.core.models.api.ServletAdapter
+import pmeig.spring.libraries.security.core.model.api.ServletAdapter
 
 @Configuration
 @ConditionalOnWebApplication(type = SERVLET)

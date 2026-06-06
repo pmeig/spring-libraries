@@ -19,8 +19,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>pmeig.spring.libraries</groupId>
-            <artifactId>logger</artifactId>
+            <groupId>io.github.pmeig</groupId>
+            <artifactId>spring-logger</artifactId>
             <version>${pmeig-logger.version}</version>
         </dependency>
     </dependencies>

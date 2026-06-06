@@ -4,6 +4,7 @@ import org.reactivestreams.Subscription
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type.REACTIVE
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebFilter
@@ -22,10 +23,15 @@ import java.util.UUID
 @Configuration
 @ConditionalOnWebApplication(type = REACTIVE)
 @ConditionalOnClass(WebFilter::class)
-class ReactiveCorrelationFilter(private val correlationProperties: CorrelationProperties) : WebFilter {
+class ReactiveCorrelationFilter(private val correlationProperties: CorrelationProperties) {
   private val logger = PmeigLoggerFactory.getLogger(ReactiveCorrelationFilter::class.java)
 
-  override fun filter(
+  @Bean
+  fun reactiveCorrelationFilter() = WebFilter {
+    exchange, chain -> filter(exchange, chain)
+  }
+
+  private fun filter(
     exchange: ServerWebExchange,
     chain: WebFilterChain
   ): Mono<Void> {

@@ -1,4 +1,4 @@
-package pmeig.spring.libraries.security.core.models.api
+package pmeig.spring.libraries.security.core.model.api
 
 import org.springframework.http.HttpCookie
 import org.springframework.http.HttpHeaders

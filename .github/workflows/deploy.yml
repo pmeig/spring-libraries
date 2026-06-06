@@ -50,7 +50,7 @@ jobs:
         if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: pmeig/github-actions/actions/github/diff@main
         with:
-          includes: 'contains=src/main'
+          includes: 'contains=/src/main'
           parent: 'true'
           target: ${{ steps.target-diff.outputs.value }}
       - name: retrieve modules change
@@ -128,22 +128,22 @@ jobs:
       - name: pre-build
         id: pre-build
         run: |
-          options='-pl '
+          options=''
           targets=''
-          for name in ${{ needs.context.outputs.modules }}
+          for module in ${{ needs.context.outputs.modules }}
           do
-            context=$(echo '${{ needs.context.outputs.modules-context }}' | jq -rc --arg key "$name" '.[$key]')
-            module=$(echo "$context" | jq -rc '.path' | rev | cut -d'/' -f1 | rev)
+            context=$(echo '${{ needs.context.outputs.modules-context }}' | jq -rc --arg key "$module" '.[$key]')
+            name=$(echo "$context" | jq -rc '.path' | rev | cut -d'/' -f1 | rev)
             version=$(echo "$context" | jq -rc '.version' | cut  -d'-' -f1)
             version="$version${{ needs.context.outputs.suffix }}"
           
             mvn version:set -DnewVersion="$version" -DgenerateBackupPoms=false -pl ":$module" -q
-            mvn version:set-property -DnewVersion="$version" -DgenerateBackupPoms=false -Dproperty=pmeig-$module.version -q
-            options="$options :$module"
+            mvn version:set-property -DnewVersion="$version" -DgenerateBackupPoms=false -Dproperty=pmeig-$name.version -q
+            options="$options,:$module"
             targets="$module/target $targets"
           done
           
-          echo "options=$options -am" >> $GITHUB_OUTPUT
+          echo "options= -pl ${options:1} -am" >> $GITHUB_OUTPUT
           mvn version:set -DnewVersion="${{ needs.context.outputs.parent-version }}" -DgenerateBackupPoms=false -q
           
           ${{ inputs.pre-build }}

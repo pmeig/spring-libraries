@@ -1,9 +1,9 @@
 package pmeig.spring.libraries.security.core.filter
 
 import org.springframework.security.core.Authentication
-import pmeig.spring.libraries.security.core.models.api.ApiRequest
+import pmeig.spring.libraries.security.core.model.api.ApiRequest
 
-@FunctionalInterface
-interface SecurityAuthenticationProvider {
-  fun from(request: ApiRequest, previous: Authentication? = null): Authentication?
+
+fun interface SecurityAuthenticationProvider {
+  fun from(request: ApiRequest, previous: Authentication?): Authentication?
 }

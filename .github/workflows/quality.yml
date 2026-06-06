@@ -1,0 +1,80 @@
+name: Quality
+on:
+  workflow_dispatch:
+    inputs:
+      modules:
+        description: modules do you want test
+        required: false
+        default: ''
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+    branches:
+      - develop
+      - main
+
+permissions: read-all
+
+env:
+  VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+  VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
+
+jobs:
+  context:
+    runs-on:
+      - self-hosted
+      - Linux
+      - pmeig
+    steps:
+      - name: checkout project
+        uses: actions/checkout@v4
+      - name: metadata
+        id: metadata
+        uses: pmeig/github-actions/actions/context/metadata@main
+      - name: retrieve module change
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        id: diff
+        uses: pmeig/github-actions/actions/github/diff@main
+        with:
+          includes: 'contains=/src/'
+          origin: ${{ steps.metadata.outputs.branch }}
+          target: ${{ steps.metadata.outputs.target }}
+          parent: 'true'
+
+
+    outputs:
+      env: ${{ steps.metadata.outputs.env-target }}
+      branch: ${{ steps.metadata.outputs.target }}
+      modules: ${{ steps.diff.outputs.parents }}${{ inputs.modules }}
+  test:
+    needs: context
+    environment: ${{ needs.context.outputs.env }}
+    runs-on:
+      - self-hosted
+      - Linux
+      - pmeig
+    steps:
+      - name: checkout project
+        uses: actions/checkout@v6
+      - name: load secrets
+        uses: pmeig/github-actions/actions/secret/vault@main
+        id: vault
+        with:
+          cache: 'false'
+          role-id: ${{ secrets.VAULT_ROLE_ID }}
+          secret-id: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            pmeig/cicd/data/sonar token | SONAR_TOKEN;
+      - name: setup java
+        uses: pmeig/github-actions/actions/java/setup@main
+      - name: sonar setup
+        uses: pmeig/github-actions/actions/java/sonar/setup@main
+        with:
+          modules: ${{ needs.context.outputs.modules }}
+          coverage-exclusions: '**/*module.* **/*Module.* **/WebAdvisor*'
+          lombok: false
+      - name: execute test
+        run: |
+          mvn clean verify -am -pl :sonar-report sonar:sonar

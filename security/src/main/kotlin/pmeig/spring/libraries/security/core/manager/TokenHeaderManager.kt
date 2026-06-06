@@ -3,8 +3,8 @@ package pmeig.spring.libraries.security.core.manager
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import pmeig.spring.libraries.security.core.manager.property.TokenHeaderProperties
-import pmeig.spring.libraries.security.core.models.api.ApiRequest
-import pmeig.spring.libraries.security.core.models.api.ApiResponse
+import pmeig.spring.libraries.security.core.model.api.ApiRequest
+import pmeig.spring.libraries.security.core.model.api.ApiResponse
 
 @Component
 @ConditionalOnProperty(prefix = "spring.security.pmeig.auth.token", name = ["manager"], havingValue = "header")

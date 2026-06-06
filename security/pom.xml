@@ -30,8 +30,8 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>pmeig.spring.libraries</groupId>
-            <artifactId>logger</artifactId>
+            <groupId>io.github.pmeig</groupId>
+            <artifactId>spring-logger</artifactId>
             <version>${pmeig-logger.version}</version>
         </dependency>
         <dependency>
@@ -44,8 +44,8 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>pmeig.spring.libraries</groupId>
-            <artifactId>cache</artifactId>
+            <groupId>io.github.pmeig</groupId>
+            <artifactId>spring-cache</artifactId>
             <version>${pmeig-cache.version}</version>
             <optional>true</optional>
         </dependency>

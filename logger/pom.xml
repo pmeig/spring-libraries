@@ -16,14 +16,16 @@
     <description>expose correlation in logger and use spring integration to expose all log in your application by channel logChannel</description>
 
     <dependencies>
+
+        <!-- RestClient -->
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-restclient</artifactId>
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-webflux</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-webclient</artifactId>
             <optional>true</optional>
         </dependency>
         <dependency>

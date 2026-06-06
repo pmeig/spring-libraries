@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RestController
 import pmeig.spring.libraries.security.authentication.jwt.JwtService
 import pmeig.spring.libraries.security.authentication.jwt.model.RequestUser
 import pmeig.spring.libraries.security.core.manager.TokenManager
-import pmeig.spring.libraries.security.core.models.api.ApiResponse
-import pmeig.spring.libraries.security.core.models.api.ServletAdapter
+import pmeig.spring.libraries.security.core.model.api.ApiResponse
+import pmeig.spring.libraries.security.core.model.api.ServletAdapter
 
 @RestController
 @RequestMapping("/login")

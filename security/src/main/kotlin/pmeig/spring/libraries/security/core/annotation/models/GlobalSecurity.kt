@@ -3,7 +3,7 @@
 package pmeig.spring.libraries.security.core.annotation.models
 
 import pmeig.spring.libraries.security.core.annotation.PmeigSecurity
-import pmeig.spring.libraries.security.core.models.SecurityFeatures
+import pmeig.spring.libraries.security.core.model.SecurityFeatures
 
 class GlobalSecurity {
   private val features = mutableMapOf<GlobalSecurityKey, List<String>>()

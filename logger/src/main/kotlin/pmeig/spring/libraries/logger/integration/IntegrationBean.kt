@@ -15,7 +15,7 @@ class IntegrationBean {
   fun logChannel() = logChannel
 
   @Bean
-  fun test(
+  fun logFlow(
     configurers: List<LoggerFlowConfigurer>,
     @Qualifier("logChannel") logChannel: DirectChannel
   ) = IntegrationFlow.from(logChannel).publishSubscribeChannel(Executors.newVirtualThreadPerTaskExecutor()) {

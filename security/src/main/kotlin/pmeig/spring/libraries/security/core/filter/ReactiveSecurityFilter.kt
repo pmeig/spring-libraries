@@ -8,7 +8,7 @@ import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.web.server.WebFilter
 import pmeig.spring.libraries.security.core.SecurityHandler
-import pmeig.spring.libraries.security.core.models.api.ReactiveAdapter
+import pmeig.spring.libraries.security.core.model.api.ReactiveAdapter
 import java.util.LinkedList
 
 @Configuration
