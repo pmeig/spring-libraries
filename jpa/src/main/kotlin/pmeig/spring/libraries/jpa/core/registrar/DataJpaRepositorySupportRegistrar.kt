@@ -14,6 +14,7 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
 import org.springframework.core.type.filter.AnnotationTypeFilter
+import pmeig.spring.libraries.jpa.core.auditing.AuditingManager
 import pmeig.spring.libraries.jpa.core.cache.DataCacheManager
 import pmeig.spring.libraries.jpa.core.converter.result.DataConverter
 import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
@@ -27,12 +28,12 @@ import kotlin.reflect.KClass
 
 @Configuration
 abstract class DataJpaRepositorySupportRegistrar<T: Any>: EnvironmentAware, BeanFactoryPostProcessor {
-  protected lateinit var environment: Environment
+  protected lateinit var env: Environment
 
   protected abstract fun annotationScan(): KClass<out Annotation>
 
   override fun setEnvironment(environment: Environment) {
-    this.environment = environment
+    this.env = environment
   }
 
   override fun postProcessBeanFactory(beanFactory: ConfigurableListableBeanFactory) {
@@ -102,6 +103,7 @@ abstract class DataJpaRepositorySupportRegistrar<T: Any>: EnvironmentAware, Bean
       BeanDefinitionBuilder.rootBeanDefinition(JpaRepositoryHandler::class.java)
         .addConstructorArgValue(methodInvokers)
         .addConstructorArgValue(beanDefinitionName.dataConverters(*beanDefinitionNameDataConverter.toTypedArray()))
+        .addConstructorArgReference(beanDefinitionName.auditingManagerBeanName)
         .addConstructorArgReference(beanDefinitionName.cacheManagerBeanName)
 
     val nameBigQueryRepository = repository.typeName + annotationScan().simpleName
@@ -125,12 +127,15 @@ abstract class DataJpaRepositorySupportRegistrar<T: Any>: EnvironmentAware, Bean
     val dataCacheManagerName = beanFactory.getBeanNamesForType(DataCacheManager::class.java).first()
     val entityAnnotationReaderName = beanFactory.getBeanNamesForType(EntityAnnotationReader::class.java).first()
     val dataContextServiceName = beanFactory.getBeanNamesForType(DataContextService::class.java).first()
+    val auditingManagerName = beanFactory.getBeanNamesForType(AuditingManager::class.java).first()
     val anotherJpaMethodInvoker = beanFactory.getBeanNamesForType(JpaMethodInvoker::class.java).toList()
     val dataConverters = beanFactory.getBeanNamesForType(DataConverter::class.java).toList()
 
     return DataRegistrarBeanDefinitionName(
       dataCacheManagerName, entityAnnotationReaderName,
-      dataContextServiceName, loadBeanDefinitionName(beanFactory), anotherJpaMethodInvoker, dataConverters
+      dataContextServiceName, loadBeanDefinitionName(beanFactory),
+      auditingManagerName,
+      anotherJpaMethodInvoker, dataConverters
     )
   }
 
@@ -140,7 +145,7 @@ abstract class DataJpaRepositorySupportRegistrar<T: Any>: EnvironmentAware, Bean
   }
 
   private fun retrieveRepositoryToRegistrar(packageName: String): Set<BeanDefinition> {
-    val scanner = object: ClassPathScanningCandidateComponentProvider(false, environment) {
+    val scanner = object: ClassPathScanningCandidateComponentProvider(false, env) {
       override fun isCandidateComponent(beanDefinition: AnnotatedBeanDefinition): Boolean {
         return beanDefinition.metadata.isInterface
       }

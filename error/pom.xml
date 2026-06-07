@@ -2,14 +2,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>pmeig.spring.libraries</groupId>
-        <artifactId>spring-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <groupId>io.github.pmeig</groupId>
+        <artifactId>spring-libraries</artifactId>
+        <version>1.0.0</version>
     </parent>
-    <artifactId>error</artifactId>
-    <packaging>war</packaging>
-    <name>error Maven Webapp</name>
-    <url>http://maven.apache.org</url>
+    <artifactId>spring-error</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+
+    <name>spring-error</name>
+    <description>expose error business or technical and apply generic advisor</description>
 
     <dependencies>
         <dependency>
@@ -18,9 +19,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>pmeig.spring.libraries</groupId>
-            <artifactId>logger</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>io.github.pmeig</groupId>
+            <artifactId>spring-logger</artifactId>
+            <version>${pmeig-logger.version}</version>
         </dependency>
     </dependencies>
 </project>

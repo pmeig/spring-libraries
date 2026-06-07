@@ -2,11 +2,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>pmeig.spring.libraries</groupId>
-        <artifactId>spring-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <groupId>io.github.pmeig</groupId>
+        <artifactId>spring-libraries</artifactId>
+        <version>1.0.0</version>
     </parent>
-    <artifactId>jpa</artifactId>
+    <artifactId>spring-jpa</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+
+    <name>spring-jpa</name>
+    <description>write bigquery like all jpa spring could create</description>
 
     <dependencies>
         <dependency>

@@ -1,0 +1,220 @@
+name: deploy application java
+on:
+  workflow_dispatch:
+    inputs:
+      pre-build:
+        description: prepare to build maven
+        required: false
+        default: ''
+      modules:
+        description: modules do you want build separate by space
+        required: false
+        default: ''
+  pull_request_target:
+    types:
+      - closed
+    branches:
+      - main
+
+permissions: write-all
+
+jobs:
+  context:
+    if: ${{ github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
+    runs-on:
+      - self-hosted
+      - Linux
+      - pmeig
+    steps:
+      - name: checkout project
+        uses: actions/checkout@v6
+      - name: setup java
+        uses: pmeig/github-actions/actions/java/setup@main
+      - name: metadata
+        id: metadata
+        uses: pmeig/github-actions/actions/context/metadata@main
+      - name: get latest tag with status pre-release false
+        id: latest-prod
+        if: ${{ github.event_name != 'workflow_dispatch' && steps.metadata.outputs.env-target != 'dev' }}
+        uses: pmeig/github-actions/actions/github/release/latest@main
+      - name: extract target to diff
+        id: target-diff
+        run: |
+          json='${{ steps.latest-prod.outputs.value }}'
+          if [ -n "$json" ]
+          then
+            echo value=$(echo "$json" | jq -rc '.tag_name') >> $GITHUB_OUTPUT
+          fi
+      - name: retrieve module change
+        id: modules-accepted
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        uses: pmeig/github-actions/actions/github/diff@main
+        with:
+          includes: 'contains=/src/main'
+          parent: 'true'
+          target: ${{ steps.target-diff.outputs.value }}
+      - name: retrieve modules change
+        id: changed
+        run: |
+          names=''
+          workspace=$(pwd)
+          for module in ${{ steps.modules-accepted.outputs.parents }}${{ inputs.modules }}
+          do
+            cd $module
+            artifactId=$(mvn help:evaluate '-Dexpression=project.artifactId' -q -DforceStdout)
+            names="$names $artifactId"
+            cd $workspace
+          done
+          echo "value=$names" >> $GITHUB_OUTPUT
+      - name: suffix version
+        id: suffix
+        uses: pmeig/github-actions/actions/context/version/suffix@main
+        with:
+          env: ${{ steps.metadata.outputs.env-target }}
+      - name: env accepted
+        id: env
+        run: |
+          env='${{ steps.metadata.outputs.env-target }}'
+          if [ '${{ github.event_name }}' == 'workflow_dispatch' ]
+          then
+            env='dev'
+          fi
+          echo "value=$env" >> $GITHUB_OUTPUT
+      - name: architecture
+        id: architecture
+        uses: pmeig/github-actions/actions/java/maven/architecture@main
+      - name: version parent
+        uses: pmeig/github-actions/actions/context/version@main
+        id: version-read
+        with:
+          env: ${{ steps.metadata.outputs.env-target }}
+    outputs:
+      modules: ${{ steps.changed.outputs.value }}
+      modules-context: ${{ steps.architecture.outputs.modules }}
+      env: ${{ steps.env.outputs.value }}
+      architecture: ${{ steps.architecture.outputs.value }}
+      target: ${{ steps.metadata.outputs.target }}
+      suffix: ${{ steps.suffix.outputs.value }}
+      parent-version: ${{ steps.version-read.outputs.semver }}
+
+
+  build:
+    needs: context
+    runs-on:
+      - self-hosted
+      - Linux
+      - pmeig
+    environment: ${{ needs.context.outputs.env }}
+    if: ${{ needs.context.outputs.modules != '' }}
+    name: build and deploy
+    steps:
+      - name: checkout project
+        uses: actions/checkout@v6
+      - name: load secrets
+        uses: pmeig/github-actions/actions/secret/vault@main
+        id: vault
+        with:
+          cache: 'false'
+          role-id: ${{ secrets.VAULT_ROLE_ID }}
+          secret-id: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            pmeig/cicd/data/artifactory/sonatype user | SONATYPE_USERNAME;
+            pmeig/cicd/data/artifactory/sonatype password | SONATYPE_PASSWORD;
+            pmeig/cicd/data/artifactory/sonatype/gpg key | GPG_KEY;
+            pmeig/cicd/data/artifactory/sonatype/gpg passphrase | GPG_PASSPHRASE;
+            pmeig/cicd/data/artifactory/sonatype/gpg secret | GPG_SECRET;
+      - name: setup java
+        uses: pmeig/github-actions/actions/java/setup@main
+      - name: pre-build
+        id: pre-build
+        run: |
+          options=''
+          targets=''
+          for module in ${{ needs.context.outputs.modules }}
+          do
+            context=$(echo '${{ needs.context.outputs.modules-context }}' | jq -rc --arg key "$module" '.[$key]')
+            name=$(echo "$context" | jq -rc '.path' | rev | cut -d'/' -f1 | rev)
+            version=$(echo "$context" | jq -rc '.version' | cut  -d'-' -f1)
+            version="$version${{ needs.context.outputs.suffix }}"
+          
+            mvn version:set -DnewVersion="$version" -DgenerateBackupPoms=false -pl ":$module" -q
+            mvn version:set-property -DnewVersion="$version" -DgenerateBackupPoms=false -Dproperty=pmeig-$name.version -q
+            options="$options,:$module"
+            targets="$module/target $targets"
+          done
+          
+          echo "options= -pl ${options:1} -am" >> $GITHUB_OUTPUT
+          mvn version:set -DnewVersion="${{ needs.context.outputs.parent-version }}" -DgenerateBackupPoms=false -q
+          
+          ${{ inputs.pre-build }}
+      - name: setup Sonatype
+        id: sonatype
+        uses: pmeig/github-actions/actions/java/maven/sonatype/setup@main
+      - name: build and deploy ${{ needs.context.outputs.modules }}
+        run: |
+          mvn clean deploy -P release -T 5 ${{ steps.pre-build.outputs.options }} -s ${{ steps.sonatype.outputs.settings }} -q
+  
+
+  next-feature:
+    runs-on:
+      - self-hosted
+      - Linux
+      - pmeig
+    needs:
+      - build
+      - context
+    if: ${{ needs.context.outputs.target == 'prod' && needs.context.outputs.env == 'dev' }}
+    steps:
+      - name: checkout develop
+        uses: actions/checkout@v6
+        with:
+          ref: develop
+      - name: get suffix for develop
+        id: suffix
+        uses: pmeig/github-actions/actions/context/version/suffix@main
+        with:
+          env: 'dev'
+      - name: release parent version
+        if: ${{ endsWith('.9', needs.context.outputs.parent-version ) == false  }}
+        id: parent-version
+        uses: pmeig/github-actions/actions/context/version/semver/bump@main
+        with:
+          type: patch
+          version: ${{ needs.context.outputs.parent-version }}
+      - name: release parent version
+        if: ${{ steps.parent-version.outputs.release == '' && contains('.9.', needs.context.outputs.parent-version ) == false }}
+        id: parent-version-minor
+        uses: pmeig/github-actions/actions/context/version/semver/bump@main
+        with:
+          type: minor
+          version: ${{ needs.context.outputs.parent-version }}
+      - name: release parent version
+        if: ${{ steps.parent-version.outputs.release == '' && needs.context.outputs.parent-version  == '' }}
+        id: parent-version-major
+        uses: pmeig/github-actions/actions/context/version/semver/bump@main
+        with:
+          type: major
+          version: ${{ needs.context.outputs.parent-version }}
+      - name: upgrade version
+        id: upgrade
+        run: |
+          for name in ${{ needs.context.outputs.modules }}
+          do
+           context=$(echo '${{ needs.context.outputs.modules-context }}' | jq -rc --arg key "$name" '.[$key]')
+           module=$(echo "$context" | jq -rc '.path' | rev | cut -d'/' -f1 | rev)
+           version=$(echo "$context" | jq -rc '.version' | cut  -d'-' -f1)
+           major="$(echo "$version" | cut -d'.' -f1)"
+           minor="$(echo "$version" | cut -d'.' -f2)"
+           version="$major.$minor.0${{ steps.suffix.outputs.value }}"
+          
+           mvn version:set -DnewVersion="$major" -DgenerateBackupPoms=false -pl ":$module" -q
+           mvn version:set-property -DnewVersion="$version" -DgenerateBackupPoms=false -Dproperty=pmeig-$module.version -q
+          done
+          
+          echo "current=$(date +%F)" >> $GITHUB_OUTPUT
+          mvn version:set -DnewVersion="${{ steps.parent-version.outputs.value }}${{ steps.parent-version-minor.outputs.value }}${{ steps.parent-version-major.outputs.value }}${{ steps.suffix.outputs.value }}" -DgenerateBackupPoms=false -q
+      - name: push next feature
+        uses: pmeig/github-actions/actions/github/push@main
+        with:
+          commit: 'bump(next-feature): next feature after release date ${{ steps.upgrade.outputs.current }}'
+          stage: '*pom.xml'

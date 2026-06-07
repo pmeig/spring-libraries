@@ -6,6 +6,7 @@ import pmeig.spring.libraries.jpa.core.auditing.AuditingManager
 import pmeig.spring.libraries.jpa.core.cache.DataCacheManager
 import pmeig.spring.libraries.jpa.core.cache.DataCacheNames
 import pmeig.spring.libraries.jpa.core.converter.result.DataConverter
+import tools.jackson.core.type.TypeReference
 import java.lang.reflect.Method
 import java.lang.reflect.Type
 
@@ -21,25 +22,24 @@ class JpaRepositoryHandler(
     var invoker = cache.get<JpaMethodInvoker>(DataCacheNames.generateKeyFromMethod(method))
     val (returnType, converter) = determineConverter(method)
     auditEntity(method, args)
-    if (invoker == null) {
-      var result = JpaMethodInvokerResult()
+    val jpaResult = if (invoker == null) {
+      var invokerResult = JpaMethodInvokerResult()
       val iterator = methodInvokers.iterator()
-      while (iterator.hasNext() && !result.executed) {
+      while (iterator.hasNext() && !invokerResult.executed) {
         invoker = iterator.next()
-        result = invoker.invokeMethod(method, returnType, args)
+        invokerResult = invoker.invokeMethod(method, returnType, args)
       }
       cache.put(cacheName, invoker)
-      return converter.convert(result)
-    }
-    val result = invoker.invokeMethod(method, returnType, args).result
-    return converter.convert(result)
+      invokerResult
+    } else invoker.invokeMethod(method, returnType, args)
+    return converter.convert(jpaResult.result)
   }
 
   private fun determineConverter(method: Method) = DataCacheNames.useCache(
     cacheManager,
     DataCacheNames.INVOKER,
     "converter::" + DataCacheNames.generateKeyFromMethod(method),
-    DataCacheNames.toTargetReference()
+    object : TypeReference<Pair<Type, DataConverter>>(){}
   )  {
     var previousType = method.genericReturnType
     var newType: Type?

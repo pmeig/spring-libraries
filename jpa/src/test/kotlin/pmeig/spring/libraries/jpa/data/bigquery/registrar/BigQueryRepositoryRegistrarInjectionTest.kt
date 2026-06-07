@@ -6,20 +6,19 @@ import org.junit.jupiter.api.assertNotNull
 import org.mockito.Mockito.mock
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor
-import org.springframework.boot.SpringBootConfiguration
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.cglib.proxy.Proxy
 import org.springframework.context.annotation.Bean
+import pmeig.spring.libraries.jpa.ApplicationTest
+import pmeig.spring.libraries.jpa.core.auditing.AuditingManager
 import pmeig.spring.libraries.jpa.core.cache.DataCacheManager
+import pmeig.spring.libraries.jpa.core.converter.result.DataConverter
 import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
 import pmeig.spring.libraries.jpa.core.executor.DataContextService
 import pmeig.spring.libraries.jpa.data.bigquery.client.BigQueryClient
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperFactory
 import pmeig.spring.libraries.jpa.shared.TestEntityRepository
-
-@SpringBootConfiguration
-class ApplicationTest
 
 
 @SpringBootTest(
@@ -47,6 +46,12 @@ class BigQueryRepositoryRegistrarInjectionTest {
 
   @TestConfiguration
   class TestConfig {
+
+    @Bean
+    fun auditingManager(): AuditingManager = mock(AuditingManager::class.java)
+
+    @Bean
+    fun dataConverter(): DataConverter = DataConverter { _, _ -> null }
 
     @Bean
     fun dataCacheManager(): DataCacheManager =

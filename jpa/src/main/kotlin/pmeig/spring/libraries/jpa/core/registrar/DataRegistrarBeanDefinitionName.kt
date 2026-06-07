@@ -8,9 +8,11 @@ data class DataRegistrarBeanDefinitionName<T>(
   val entityAnnotationReaderBeanName: String,
   val dataContextServiceBeanName: String,
   val loadBeanDefinitionName: T?,
+  val auditingManagerBeanName: String,
   private val anotherJpaMethodInvoker: List<String>,
   private val dataConvertersBeanName: List<String>,
 ) {
+
   fun dataConverters(vararg converters: Any) = toManagedList(dataConvertersBeanName, converters)
 
   fun jpaMethodInvoker(vararg invokers: Any) = toManagedList(anotherJpaMethodInvoker, invokers)

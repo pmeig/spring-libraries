@@ -1,4 +1,4 @@
-package pmeig.spring.libraries.security.core.models
+package pmeig.spring.libraries.security.core.model
 
 import org.springframework.security.authorization.AuthorityAuthorizationDecision
 import org.springframework.security.authorization.AuthorityReactiveAuthorizationManager

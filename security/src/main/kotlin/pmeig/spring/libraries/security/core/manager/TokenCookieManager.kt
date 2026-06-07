@@ -4,8 +4,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.ResponseCookie
 import org.springframework.stereotype.Component
 import pmeig.spring.libraries.security.core.manager.property.TokenCookieProperties
-import pmeig.spring.libraries.security.core.models.api.ApiRequest
-import pmeig.spring.libraries.security.core.models.api.ApiResponse
+import pmeig.spring.libraries.security.core.model.api.ApiRequest
+import pmeig.spring.libraries.security.core.model.api.ApiResponse
 import java.time.Duration
 
 @Component

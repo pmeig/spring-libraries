@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 import pmeig.spring.libraries.security.core.AuthenticationFactory
 import pmeig.spring.libraries.security.core.filter.SecurityAuthenticationProvider
 import pmeig.spring.libraries.security.core.manager.TokenManager
-import pmeig.spring.libraries.security.core.models.api.ApiRequest
+import pmeig.spring.libraries.security.core.model.api.ApiRequest
 
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE)

@@ -9,7 +9,7 @@ import org.yaml.snakeyaml.Yaml
 
 @ConditionalOnMissingBean(Yaml::class)
 @Configuration
-class YamlConfigurer {
+class YamlConfiguration {
 
   @Bean
   @ConditionalOnMissingBean(DumperOptions::class)

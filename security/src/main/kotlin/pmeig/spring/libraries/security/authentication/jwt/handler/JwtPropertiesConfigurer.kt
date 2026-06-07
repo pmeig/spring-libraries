@@ -15,7 +15,7 @@ import kotlin.time.toJavaInstant
 @Component
 @ConditionalOnMissingBean(JwtConfigurer::class)
 class JwtPropertiesConfigurer(private val properties: JwtProperties): JwtConfigurer {
-  override fun prepareCreateToken(builder: JwtBuilder) = builder.issuer(properties.issuer)
+  override fun prepareCreateToken(builder: JwtBuilder): JwtBuilder = builder.issuer(properties.issuer)
     .expiration(dateExpiration())
     .subject(properties.subject).signWith(properties.keyPair().private)
 

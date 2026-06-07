@@ -1,4 +1,4 @@
-package pmeig.spring.libraries.security.core.models
+package pmeig.spring.libraries.security.core.model
 
 import pmeig.spring.libraries.security.core.annotation.PmeigSecurity
 

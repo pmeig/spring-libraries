@@ -3,6 +3,7 @@ package pmeig.spring.libraries.swagger.configuration.security
 import org.springdoc.core.properties.SpringDocConfigProperties
 import org.springdoc.core.properties.SwaggerUiConfigProperties
 import org.springframework.beans.factory.config.BeanPostProcessor
+import org.springframework.beans.factory.getBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type.SERVLET
@@ -25,11 +26,17 @@ class ServletSwaggerSecurity: BeanPostProcessor, ApplicationContextAware {
 
   override fun postProcessAfterInitialization(bean: Any, beanName: String): Any? {
     if (bean is HttpSecurity) {
-      val swaggerUiConfigProperties = applicationContext.getBean(SwaggerUiConfigProperties::class.java)
-      val springDocConfigProperties = applicationContext.getBean(SpringDocConfigProperties::class.java)
+      val swaggerUiConfigProperties = applicationContext.getBean<SwaggerUiConfigProperties>()
+      val springDocConfigProperties = applicationContext.getBean<SpringDocConfigProperties>()
       return bean.authorizeHttpRequests { authorize ->
-        authorize.requestMatchers(*arrayOf("/webjars/**", "/swagger-ui/**",
-          startedBySlash(swaggerUiConfigProperties.path), startedBySlash("${springDocConfigProperties.apiDocs.path}/**")))
+        authorize.requestMatchers(
+          *arrayOf(
+            "/webjars/**",
+            "/swagger-ui/**",
+            startedBySlash(swaggerUiConfigProperties.path),
+            startedBySlash("${springDocConfigProperties.apiDocs.path}/**")
+          )
+        )
           .permitAll()
       }
     }

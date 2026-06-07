@@ -3,7 +3,7 @@ package pmeig.spring.libraries.security.core.annotation.models
 import org.springframework.web.bind.annotation.RequestMethod
 import pmeig.spring.libraries.security.core.annotation.PmeigSecurity
 import pmeig.spring.libraries.security.core.authorization.SecurityAuthorization
-import pmeig.spring.libraries.security.core.models.SecurityFeatures
+import pmeig.spring.libraries.security.core.model.SecurityFeatures
 
 data class AnnotationAuthorization(
   val path: List<String> = emptyList(),

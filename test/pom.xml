@@ -8,8 +8,8 @@
         <version>4.0.2</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>pmeig.spring.libraries</groupId>
-    <artifactId>test</artifactId>
+    <groupId>io.github.pmeig</groupId>
+    <artifactId>spring-libraries-test</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>test</name>
     <description>test</description>
@@ -30,32 +30,39 @@
         <java.version>25</java.version>
         <kotlin.version>2.3.0</kotlin.version>
         <spring-cloud.version>2025.1.0</spring-cloud.version>
+
+        <pmeig-swagger.version>1.0.0-SNAPSHOT</pmeig-swagger.version>
+        <pmeig-logger.version>1.0.0-SNAPSHOT</pmeig-logger.version>
+        <pmeig-cache.version>1.0.0-SNAPSHOT</pmeig-cache.version>
+        <pmeig-security.version>1.0.0-SNAPSHOT</pmeig-security.version>
+        <pmeig-jpa.version>1.0.0-SNAPSHOT</pmeig-jpa.version>
+        <pmeig-error.version>1.0.0-SNAPSHOT</pmeig-error.version>
     </properties>
     <dependencies>
         <dependency>
-            <groupId>pmeig.spring.libraries</groupId>
-            <artifactId>logger</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>io.github.pmeig</groupId>
+            <artifactId>spring-logger</artifactId>
+            <version>${pmeig-logger.version}</version>
         </dependency>
         <dependency>
-            <groupId>pmeig.spring.libraries</groupId>
-            <artifactId>swagger</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>io.github.pmeig</groupId>
+            <artifactId>spring-swagger</artifactId>
+            <version>${pmeig-swagger.version}</version>
         </dependency>
         <dependency>
-            <groupId>pmeig.spring.libraries</groupId>
-            <artifactId>cache</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>io.github.pmeig</groupId>
+            <artifactId>spring-cache</artifactId>
+            <version>${pmeig-cache.version}</version>
         </dependency>
 <!--        <dependency>-->
-<!--            <groupId>pmeig.spring.libraries</groupId>-->
-<!--            <artifactId>security</artifactId>-->
-<!--            <version>1.0.0-SNAPSHOT</version>-->
+<!--            <groupId>io.github.pmeig</groupId>-->
+<!--            <artifactId>spring-security</artifactId>-->
+<!--            <version>${pmeig-security.version}</version>-->
 <!--        </dependency>-->
         <dependency>
-            <groupId>pmeig.spring.libraries</groupId>
-            <artifactId>error</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>io.github.pmeig</groupId>
+            <artifactId>spring-error</artifactId>
+            <version>${pmeig-error.version}</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>

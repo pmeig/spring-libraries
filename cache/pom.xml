@@ -4,25 +4,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>pmeig.spring.libraries</groupId>
-        <artifactId>spring-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <groupId>io.github.pmeig</groupId>
+        <artifactId>spring-libraries</artifactId>
+        <version>1.0.0</version>
     </parent>
 
-    <artifactId>cache</artifactId>
+    <artifactId>spring-cache</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin.code.style>official</kotlin.code.style>
-        <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
-    </properties>
-
-    <repositories>
-        <repository>
-            <id>mavenCentral</id>
-            <url>https://repo1.maven.org/maven2/</url>
-        </repository>
-    </repositories>
+    <name>spring-cache</name>
+    <description>configure cache by properties or by class</description>
 
     <build>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
@@ -53,17 +44,17 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
-            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast</artifactId>
-            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast-spring</artifactId>
-            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>

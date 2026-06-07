@@ -13,7 +13,7 @@ import org.springframework.web.reactive.function.server.ServerResponse
 import pmeig.spring.libraries.security.authentication.jwt.JwtService
 import pmeig.spring.libraries.security.authentication.jwt.model.RequestUser
 import pmeig.spring.libraries.security.core.manager.TokenManager
-import pmeig.spring.libraries.security.core.models.api.ReactiveAdapter
+import pmeig.spring.libraries.security.core.model.api.ReactiveAdapter
 import reactor.core.publisher.Mono
 
 @RestController

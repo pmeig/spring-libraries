@@ -3,16 +3,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
-        <groupId>pmeig.spring.libraries</groupId>
-        <artifactId>spring-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <groupId>io.github.pmeig</groupId>
+        <artifactId>spring-libraries</artifactId>
+        <version>1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>security</artifactId>
-    <!--suppress MavenRedundantVersion -->
+    <artifactId>spring-security</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <name>security</name>
-    <description>security</description>
+
+    <name>spring-libraries</name>
+    <description>expose custom annotation simplify secure and expose endpoint</description>
 
     <properties>
         <jwt.version>0.13.0</jwt.version>
@@ -27,12 +27,12 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>pmeig.spring.libraries</groupId>
-            <artifactId>logger</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>io.github.pmeig</groupId>
+            <artifactId>spring-logger</artifactId>
+            <version>${pmeig-logger.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
@@ -42,13 +42,12 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-webflux</artifactId>
             <optional>true</optional>
-            <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>pmeig.spring.libraries</groupId>
-            <artifactId>cache</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-            <scope>provided</scope>
+            <groupId>io.github.pmeig</groupId>
+            <artifactId>spring-cache</artifactId>
+            <version>${pmeig-cache.version}</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>tools.jackson.module</groupId>
