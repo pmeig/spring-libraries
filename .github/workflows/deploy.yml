@@ -25,6 +25,7 @@ jobs:
       - self-hosted
       - Linux
       - pmeig
+      - mvn
     steps:
       - name: checkout project
         uses: actions/checkout@v6
@@ -104,6 +105,7 @@ jobs:
       - self-hosted
       - Linux
       - pmeig
+      - mvn
     environment: ${{ needs.context.outputs.env }}
     if: ${{ needs.context.outputs.modules != '' }}
     name: build and deploy
@@ -160,6 +162,7 @@ jobs:
       - self-hosted
       - Linux
       - pmeig
+      - mvn
     needs:
       - build
       - context

@@ -55,6 +55,7 @@ jobs:
       - self-hosted
       - Linux
       - pmeig
+      - mvn
     steps:
       - name: checkout project
         uses: actions/checkout@v6
@@ -75,6 +76,18 @@ jobs:
           modules: ${{ needs.context.outputs.modules }}
           coverage-exclusions: '**/*module.* **/*Module.* **/WebAdvisor*'
           lombok: false
+      - name: save state
+        if: failure()
+        run: |
+          git checkout -b cicd/failure
+          git stage .
+          git push -u origin cicd/failure
       - name: execute test
         run: |
           mvn clean verify -am -pl :sonar-report sonar:sonar
+      - name: save state
+        if: failure()
+        run: |
+          git checkout -b cicd/failure
+          git stage .
+          git push -u origin cicd/failure
