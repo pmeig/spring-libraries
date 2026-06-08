@@ -76,12 +76,6 @@ jobs:
           modules: ${{ needs.context.outputs.modules }}
           coverage-exclusions: '**/*module.* **/*Module.* **/WebAdvisor*'
           lombok: false
-      - name: save state
-        if: failure()
-        run: |
-          git checkout -b cicd/failure
-          git stage .
-          git push -u origin cicd/failure
       - name: execute test
         run: |
           mvn clean verify -am -pl :sonar-report sonar:sonar
@@ -90,4 +84,5 @@ jobs:
         run: |
           git checkout -b cicd/failure
           git stage .
+          git commit -m 'fail project to test'
           git push -u origin cicd/failure
