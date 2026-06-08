@@ -15,7 +15,7 @@ on:
       - develop
       - main
 
-permissions: read-all
+permissions: write-all
 
 env:
   VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
