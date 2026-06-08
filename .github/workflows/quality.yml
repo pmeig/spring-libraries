@@ -83,6 +83,8 @@ jobs:
         if: failure()
         run: |
           git checkout -b cicd/failure
+          git config --global user.email "cicd@pmeig.com"
+          git config --global user.name "Pmeig CICD"
           git stage .
           git commit -m 'fail project to test'
           git push -u origin cicd/failure
