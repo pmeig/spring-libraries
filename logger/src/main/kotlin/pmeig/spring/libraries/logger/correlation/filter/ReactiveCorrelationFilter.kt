@@ -6,6 +6,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type.REACTIVE
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+import org.springframework.core.annotation.Order
 import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
@@ -27,6 +29,7 @@ class ReactiveCorrelationFilter(private val correlationProperties: CorrelationPr
   private val logger = PmeigLoggerFactory.getLogger(ReactiveCorrelationFilter::class.java)
 
   @Bean
+  @Order(Ordered.HIGHEST_PRECEDENCE)
   fun reactiveCorrelationFilter() = WebFilter {
     exchange, chain -> filter(exchange, chain)
   }
