@@ -12,6 +12,10 @@
     <name>spring-error</name>
     <description>expose error business or technical and apply generic advisor</description>
 
+    <properties>
+        <sonar.tests></sonar.tests>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework</groupId>

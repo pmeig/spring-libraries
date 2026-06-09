@@ -15,6 +15,10 @@
     <name>spring-logger</name>
     <description>expose correlation in logger and use spring integration to expose all log in your application by channel logChannel</description>
 
+    <properties>
+        <sonar.tests></sonar.tests>
+    </properties>
+
     <dependencies>
 
         <!-- RestClient -->

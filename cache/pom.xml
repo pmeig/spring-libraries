@@ -15,6 +15,10 @@
     <name>spring-cache</name>
     <description>configure cache by properties or by class</description>
 
+    <properties>
+        <sonar.tests></sonar.tests>
+    </properties>
+
     <build>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
