@@ -39,7 +39,7 @@ class ReactiveCorrelationFilter(private val correlationProperties: CorrelationPr
     chain: WebFilterChain
   ): Mono<Void> {
     val key = exchange.request.id
-    val correlationId = exchange.request.headers.get(correlationProperties.header)?.let {
+    val correlationId = exchange.request.headers[correlationProperties.header]?.let {
       val uuid = UUID.fromString(it.first())
       exchange.request.attributes[correlationProperties.request] = uuid
       uuid

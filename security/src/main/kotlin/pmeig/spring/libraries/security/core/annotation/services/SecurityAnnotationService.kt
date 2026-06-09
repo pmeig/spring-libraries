@@ -39,14 +39,14 @@ class SecurityAnnotationService(applicationContext: ApplicationContext) {
         val classname = Class.forName(it.beanClassName)
         val parentPath = extractPaths(classname)
         val globals = AnnotatedElementUtils
-          .getAllMergedAnnotations(classname, PmeigSecurity::class.java)
+          .getAllMergedAnnotations(classname, PmeigSecurity::class.java).toSet()
         val apply = createInjectorGlobalSecurity(globals)
         authorizations.addAll(
           toPmeigAuthorization(
             parentPath,
             classname.declaredMethods.filter(filterMethods(globals)),
             apply
-          ).flatMap { it.toSecuritiesAuthorization() }
+          ).flatMap { authorization -> authorization.toSecuritiesAuthorization() }
         )
       }
     return authorizations
@@ -83,7 +83,7 @@ class SecurityAnnotationService(applicationContext: ApplicationContext) {
 
   }
 
-  private fun filterMethods(globals: MutableSet<PmeigSecurity>): (Method) -> Boolean =
+  private fun filterMethods(globals: Set<PmeigSecurity>): (Method) -> Boolean =
     if (globals.isNotEmpty()) {
       {
         AnnotatedElementUtils.hasAnnotation(

@@ -4,10 +4,12 @@ import org.slf4j.Marker
 import org.slf4j.event.Level
 import org.springframework.messaging.Message
 import org.springframework.messaging.MessageHeaders
-import org.springframework.util.DigestUtils
 import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
+import java.security.MessageDigest
+
+private val SHA_ALGORITHM = MessageDigest.getInstance("SHA-512")
 
 class LoggerMessage(
   val name: String,
@@ -32,11 +34,21 @@ class LoggerMessage(
     writer.flush()
     return MessageHeaders(mapOf(Pair("name", name), Pair("level", level), Pair("exception", cause?.let { true } ?: false), Pair(
       "id",
-      DigestUtils.md5DigestAsHex(arrayOutputStream.toByteArray())
+      encodeHex(SHA_ALGORITHM.digest(this.message.toByteArray()))
     ))).apply {
       writer.close()
       arrayOutputStream.close()
     }
+  }
+
+  private fun encodeHex(bytes: ByteArray): String {
+    val hexString = StringBuilder()
+    for (byte in bytes) {
+      val hex = Integer.toHexString(0xff and byte.toInt())
+      if (hex.length == 1) hexString.append('0')
+      hexString.append(hex)
+    }
+    return hexString.toString()
   }
 
 

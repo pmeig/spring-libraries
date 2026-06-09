@@ -41,7 +41,7 @@ class QueryJpaBigQueryRepository(
   }
 
   private fun createConfigurator(
-    parameters: MutableList<ParameterContext>,
+    parameters: List<ParameterContext>,
     configuratorIndex: Int,
     args: Array<Any?>
   ): (Array<Any?>) -> (QueryJobConfiguration.Builder) -> QueryJobConfiguration.Builder {

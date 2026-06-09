@@ -119,11 +119,11 @@ abstract class BigQueryMultiClient(
     val metadata = getMetadata(entityRef)
     val tableResult = query(sqlMapper.pageQuery(sql, pageable, metadata), configurator)
     val result = tableResult.iterateAll().first()
-    val items = result.get("items").repeatedValue!!
-    val total = result.get("total").longValue
+    val items = result["items"].repeatedValue!!.toList()
+    val total = result["total"].longValue
     val entities = toEntity(entityRef, metadata) {
       TableResult.newBuilder()
-        .setSchema(Schema.of(tableResult.schema!!.fields.get("items").subFields))
+        .setSchema(Schema.of(tableResult.schema!!.fields["items"].subFields))
         .setPageNoSchema(BigQueryPage(items))
         .build()
     }!!
@@ -139,7 +139,7 @@ abstract class BigQueryMultiClient(
         createEntityFieldMappers(entity, tableResult, metadata)
       }
       mappers.forEach { (fieldName, mapper) ->
-        val fieldValue = it.get(fieldName)
+        val fieldValue = it[fieldName]
         mapper.map(newEntity, fieldValue)
       }
       newEntity
@@ -154,10 +154,10 @@ abstract class BigQueryMultiClient(
   ): Map<String, BigQueryFieldMapper<*>> {
     val schema = tableResult.schema ?: return emptyMap()
     return schema.fields.associate {
-      val accessor = metadata.columns.all[it.name]!!
+      val accessor = metadata.columns.all[it.name]
       it.name to BigQueryFieldMapper(
-        accessor,
-        mapperFactory.factory(schema.fields.get(it.name), mapperFactory.toMetadataFactory(accessor))
+        accessor!!,
+        mapperFactory.factory(schema.fields[it.name], mapperFactory.toMetadataFactory(accessor))
                 as BigQueryMapper<Any>
       )
     }
@@ -169,7 +169,7 @@ abstract class BigQueryMultiClient(
     val mappers = mapperFactory.fromSchema(tableResult.schema, metadataFactory)
     tableResult.iterateAll().map {
       mappers.entries.associate { (name, mapper) ->
-        name to mapper.map(it.get(name))
+        name to mapper.map(it[name])
       }
     }
   }

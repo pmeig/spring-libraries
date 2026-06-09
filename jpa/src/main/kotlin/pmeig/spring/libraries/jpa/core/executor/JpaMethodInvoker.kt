@@ -7,7 +7,7 @@ class JpaMethodInvokerResult(val result: Any?, val executed: Boolean = true) {
   constructor(executed: Boolean = false) : this(null, executed)
 }
 
-@FunctionalInterface
-interface JpaMethodInvoker {
+
+fun interface JpaMethodInvoker {
   fun invokeMethod(method: Method, returnType: Type, args: Array<Any?>): JpaMethodInvokerResult
 }

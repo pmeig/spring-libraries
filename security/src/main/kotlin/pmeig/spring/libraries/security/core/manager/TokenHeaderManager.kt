@@ -15,7 +15,7 @@ class TokenHeaderManager(private val properties: TokenHeaderProperties): TokenMa
 
   override fun insertToken(token: String, resp: ApiResponse<*>) {
     resp.headers {
-      it.set(properties.name, "${properties.prefix}$token")
+      it[properties.name] = "${properties.prefix}$token"
     }
   }
 

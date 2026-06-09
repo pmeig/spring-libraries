@@ -54,7 +54,7 @@ class MethodSpecificationFactory(
     val deep = treatment.split("_").map {
       it[0].lowercase() + it.substring(1)
     }
-    return { root -> deep.fold(root as Path<Any>) { acc, part -> acc.get(part) } }
+    return { root -> deep.fold(root as Path<Any>) { acc, part -> acc[part] } }
   }
 
 }

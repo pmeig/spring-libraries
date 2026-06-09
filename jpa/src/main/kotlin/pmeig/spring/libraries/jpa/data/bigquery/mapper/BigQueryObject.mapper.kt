@@ -107,7 +107,7 @@ private class BigQueryGeographyMapper() : BigQueryMapper<String> {
 private class BigQueryStructMapper(private val mappers: Map<String, BigQueryMapper<*>>) : BigQueryMapper<Map<String, Any?>> {
   override fun map(value: FieldValue?): Map<String, Any?>? {
     return value?.recordValue?.let { struct ->
-      mappers.entries.associate { (key, mapper) -> key to mapper.map(struct.get(key).let {
+      mappers.entries.associate { (key, mapper) -> key to mapper.map(struct[key].let {
         if (it.isNull) null else it
       }) }
     }
@@ -115,7 +115,8 @@ private class BigQueryStructMapper(private val mappers: Map<String, BigQueryMapp
 
   override fun parameter(value: Any?): QueryParameterValue? = value?.let {
     val type = ClassUtils.getUserClass(it)
-    QueryParameterValue.struct(mappers.entries.associate { (key, mapper) -> key to mapper.parameter(type.getField(key).get(value)) })
+    QueryParameterValue
+      .struct(mappers.entries.associate { (key, mapper) -> key to mapper.parameter(type.getField(key)[value]) })
   }
 
   override fun equals(other: Any?): Boolean {

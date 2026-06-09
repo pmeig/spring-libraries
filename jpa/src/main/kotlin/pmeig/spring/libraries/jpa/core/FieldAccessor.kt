@@ -77,8 +77,8 @@ open class FieldAccessorWrapper<T>(val field: Field,
 
   init {
     field.isAccessible = true
-    getter = MethodGetter<T>(field).let { if (it.isReadable()) it::get else { entity: Any? -> field.get(entity) as T? } }
-    setter = MethodSetter<T>(field).let { if(it.isWritable()) it::set else ({ entity: Any?, value: T? -> field.set(entity, value)}) }
+    getter = MethodGetter<T>(field).let { if (it.isReadable()) it::get else { entity: Any? -> field[entity] as T? } }
+    setter = MethodSetter<T>(field).let { if(it.isWritable()) it::set else ({ entity: Any?, value: T? -> field[entity] = value }) }
   }
   override fun get(entity: Any?): T? = getter(entity)
   override fun set(entity: Any?, value: T?) = setter(entity, value)

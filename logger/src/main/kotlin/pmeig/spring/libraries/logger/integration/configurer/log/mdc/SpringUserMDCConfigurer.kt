@@ -29,7 +29,7 @@ class SpringUserMDCConfigurer: MDCConfigurer {
     return clazz.declaredFields.flatMap { field ->
       field.isAccessible = true
       val parent = "$prefix.${field.name}"
-      when (val value = field.get(item)) {
+      when (val value = field[item]) {
         is Collection<*> -> iterableToPairs(value.iterator(), parent)
         is Array<*> -> iterableToPairs(value.iterator(), parent)
         is String, is Number, is Boolean -> listOf(Pair(parent, value.toString()))
