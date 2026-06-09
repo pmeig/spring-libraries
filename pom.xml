@@ -201,8 +201,8 @@
         </pluginManagement>
         <plugins>
             <plugin>
-                <groupId>pmeig.plugins</groupId>
-                <artifactId>additional-metadata</artifactId>
+                <groupId>io.github.pmeig</groupId>
+                <artifactId>spring-additional-metadata-plugin</artifactId>
                 <version>1.0.0</version>
                 <executions>
                     <execution>

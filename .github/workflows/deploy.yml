@@ -58,6 +58,20 @@ jobs:
         id: changed
         run: |
           names=''
+          modules='${{ steps.modules-accepted.outputs.parents }}${{ inputs.modules }}'
+          if [ -z "$modules" ]
+          then
+            here="$(pwd)"
+            for pom in $(find . -name pom.xml)
+            do
+              name="$(dirname $pom)"
+              name="${name/$here/.}"
+              if [ "$name" != '.' ]
+              then
+                modules="$name $modules"
+              fi
+            done
+          fi
           workspace=$(pwd)
           for module in ${{ steps.modules-accepted.outputs.parents }}${{ inputs.modules }}
           do
@@ -69,6 +83,7 @@ jobs:
           echo "value=$names" >> $GITHUB_OUTPUT
       - name: suffix version
         id: suffix
+        if: ${{ github.event_name == 'workflow_dispatch' && steps.metadata.outputs.env-target != 'prod' }}
         uses: pmeig/github-actions/actions/context/version/suffix@main
         with:
           env: ${{ steps.metadata.outputs.env-target }}
@@ -139,14 +154,14 @@ jobs:
             version=$(echo "$context" | jq -rc '.version' | cut  -d'-' -f1)
             version="$version${{ needs.context.outputs.suffix }}"
           
-            mvn version:set -DnewVersion="$version" -DgenerateBackupPoms=false -pl ":$module" -q
-            mvn version:set-property -DnewVersion="$version" -DgenerateBackupPoms=false -Dproperty=pmeig-$name.version -q
+            mvn versions:set -DnewVersion=$version -DgenerateBackupPoms=false -pl :$module -q
+            mvn versions:set-property -DnewVersion=$version -DgenerateBackupPoms=false -Dproperty=pmeig-$name.version -q
             options="$options,:$module"
             targets="$module/target $targets"
           done
           
-          echo "options= -pl ${options:1} -am" >> $GITHUB_OUTPUT
-          mvn version:set -DnewVersion="${{ needs.context.outputs.parent-version }}" -DgenerateBackupPoms=false -q
+          echo "options=-pl ${options:1} -am" >> $GITHUB_OUTPUT
+          mvn versions:set -DnewVersion=${{ needs.context.outputs.parent-version }} -DgenerateBackupPoms=false -q
           
           ${{ inputs.pre-build }}
       - name: setup Sonatype
@@ -154,8 +169,8 @@ jobs:
         uses: pmeig/github-actions/actions/java/maven/sonatype/setup@main
       - name: build and deploy ${{ needs.context.outputs.modules }}
         run: |
-          mvn clean deploy -P release -T 5 ${{ steps.pre-build.outputs.options }} -s ${{ steps.sonatype.outputs.settings }} -q
-  
+          mvn clean deploy -P release -T 5 ${{ steps.pre-build.outputs.options }} -s '${{ steps.sonatype.outputs.settings }}' -q
+ 
 
   next-feature:
     runs-on:
