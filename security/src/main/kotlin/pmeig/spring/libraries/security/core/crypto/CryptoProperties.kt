@@ -13,7 +13,7 @@ class CryptoProperties(
       val alphanumeric = ('a'..'z') + ('A'..'Z') + ('0'..'9')
       val random = (1..16).map { alphanumeric.random() }.joinToString("")
       println("Generated crypto secret: $random")
-      secret = random
+      field = random
       random
     }
 

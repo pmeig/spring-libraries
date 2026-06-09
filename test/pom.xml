@@ -14,22 +14,11 @@
     <name>test</name>
     <description>test</description>
     <url/>
-    <licenses>
-        <license/>
-    </licenses>
-    <developers>
-        <developer/>
-    </developers>
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
-    </scm>
     <properties>
         <java.version>25</java.version>
         <kotlin.version>2.3.0</kotlin.version>
         <spring-cloud.version>2025.1.0</spring-cloud.version>
+        <sonar.skip>true</sonar.skip>
 
         <pmeig-swagger.version>1.0.0-SNAPSHOT</pmeig-swagger.version>
         <pmeig-logger.version>1.0.0-SNAPSHOT</pmeig-logger.version>

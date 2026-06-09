@@ -16,7 +16,7 @@
     <description>configure cache by properties or by class</description>
 
     <properties>
-        <sonar.tests></sonar.tests>
+        <sonar.tests/>
     </properties>
 
     <build>

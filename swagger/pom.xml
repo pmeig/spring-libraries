@@ -16,6 +16,7 @@
 
     <properties>
         <springdoc.version>3.0.2</springdoc.version>
+        <sonar.tests/>
     </properties>
 
     <dependencies>

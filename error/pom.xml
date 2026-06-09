@@ -13,7 +13,7 @@
     <description>expose error business or technical and apply generic advisor</description>
 
     <properties>
-        <sonar.tests></sonar.tests>
+        <sonar.tests/>
     </properties>
 
     <dependencies>
