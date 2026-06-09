@@ -80,9 +80,8 @@ jobs:
         run: |
           mvn clean verify -am -pl :sonar-report sonar:sonar
       - name: save state
-        if: failure()
         run: |
-          git checkout -b cicd/failure
+          git checkout -b quality
           git config --global user.email "cicd@pmeig.com"
           git config --global user.name "Pmeig CICD"
           git stage .
