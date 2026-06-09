@@ -86,4 +86,4 @@ jobs:
           git config --global user.name "Pmeig CICD"
           git stage .
           git commit -m 'fail project to test'
-          git push -u origin cicd/failure
+          git push -u origin quality
