@@ -79,11 +79,3 @@ jobs:
       - name: execute test
         run: |
           mvn clean verify -am -pl :sonar-report sonar:sonar
-      - name: save state
-        run: |
-          git checkout -b quality
-          git config --global user.email "cicd@pmeig.com"
-          git config --global user.name "Pmeig CICD"
-          git stage .
-          git commit -m 'fail project to test'
-          git push -u origin quality
