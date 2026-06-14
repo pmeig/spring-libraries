@@ -79,3 +79,23 @@ jobs:
       - name: execute test
         run: |
           mvn clean verify -am -pl :sonar-report sonar:sonar
+      - name: save sonar
+        if: failure() || success()
+        run: |
+          git config --global user.email "cicd@pmeig.com"
+          git config --global user.name "Pmeig CICD"
+          checkoutOption=''
+          pushOption=''
+          
+          branchName="sonar/${{ github.sha }}"
+          
+          if [ -z "$(git branch -r | grep $branchName)" ]
+          then
+            checkoutOption='-b'
+            pushOption="-u origin $branchName"
+          fi
+          
+          git checkout $checkoutOptions $branchName
+          git stage .
+          git commit -m 'fail project to test'
+          git push $pushOption
