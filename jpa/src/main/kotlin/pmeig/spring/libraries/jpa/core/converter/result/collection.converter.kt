@@ -20,7 +20,7 @@ class SetConverter: DataConverter {
     returnType: Type
   ): Type? {
     if (returnType is ParameterizedType &&
-      ClassUtils.forName(returnType.rawType.typeName, returnType.javaClass.classLoader).isAssignableFrom(Set::class.java)) {
+      Set::class.java.isAssignableFrom(ClassUtils.forName(returnType.rawType.typeName, returnType.javaClass.classLoader))) {
       return toList(returnType)
     }
     return null
@@ -43,7 +43,7 @@ class CollectionConverter: DataConverter {
     if (returnType !is ParameterizedType) return null
 
     val clazz = ClassUtils.forName(returnType.rawType.typeName, returnType.javaClass.classLoader)
-    if (!clazz.isAssignableFrom(Collection::class.java) || !clazz.isAssignableFrom(Set::class.java)
+    if (!Collection::class.java.isAssignableFrom(clazz) || !Set::class.java.isAssignableFrom(clazz)
       || listOf(List::class.java, ArrayList::class.java).contains(clazz)
     ) return null
 

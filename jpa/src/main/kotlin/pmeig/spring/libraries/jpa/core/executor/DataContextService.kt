@@ -121,7 +121,7 @@ class DataContextService(
   private fun checkIsCollection(returnType: Type): Boolean {
     if (returnType !is ParameterizedType) return false
     val rawType = returnType.rawType as Class<*>
-    return rawType.isAssignableFrom(Collection::class.java)
+    return Collection::class.java.isAssignableFrom(rawType)
   }
 
   private fun checkIsMap(returnType: Type, isCollection: Boolean = false): Boolean {
@@ -131,7 +131,7 @@ class DataContextService(
     }
     if (returnType !is ParameterizedType) return false
     val rawType = (returnType.rawType as Class<*>)
-    return rawType.isAssignableFrom(Map::class.java)
+    return Map::class.java.isAssignableFrom(rawType)
   }
 
 }

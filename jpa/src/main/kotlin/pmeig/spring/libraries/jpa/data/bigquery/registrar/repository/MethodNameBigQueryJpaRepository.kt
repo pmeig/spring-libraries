@@ -7,7 +7,7 @@ import java.lang.reflect.Method
 import java.lang.reflect.Type
 
 class MethodNameBigQueryJpaRepository(
-  private val simpleJpaBigQueryRepository: SimpleJpaBigQueryRepository,
+  private val simpleJpaBigQueryRepository: SimpleJpaBigQueryRepository<Any,*>,
   private val dataContextService: DataContextService,
 ): JpaMethodInvoker {
   override fun invokeMethod(

@@ -37,15 +37,24 @@ class BigQueryMapperFactory(
       BigQueryMapper::class) {
       if (type is ParameterizedType) {
         val clazz = Class.forName(type.rawType.typeName)
-        if (clazz.isAssignableFrom(Collection::class.java)) {
+        if (Collection::class.java.isAssignableFrom(clazz)) {
           val valueType = type.actualTypeArguments.first()
           return@useCache BigQueryObjectMapper.from(type)!!.factory(jsonMapper, fromType(valueType), emptyMap())
         }
       }
       BigQueryPrimitive.from(type)?.mapper ?: BigQueryDate.from(type)?.mapper ?: BigQueryObjectMapper.from(type)
-        ?.factory(jsonMapper, null, emptyMap())
+        ?.factory(jsonMapper, null, extractMapperEachField(type))
       ?: error("No mapper found for type $type")
     }
+
+  private fun extractMapperEachField(type: Type): Map<String, BigQueryMapper<*>> {
+    val clazz = (if (type is ParameterizedType ) {
+      if (Map::class.java.isAssignableFrom(type.rawType as? Class<*> ?: Any::class.java)) return emptyMap()
+      type.rawType
+    } else type) as Class<*>
+
+    return getAllFields(clazz).associate { it.name to fromType(it.type) }
+  }
 
   fun fromSchema(
     schema: Schema?,
@@ -60,7 +69,7 @@ class BigQueryMapperFactory(
     return DataCacheNames.useCache(cacheManager, MAPPERS_CACHE, "METADATA_FACTORY::${type.typeName}",
       BigQueryMetadataFactory::class) {
 
-      if (type is ParameterizedType && !(type.rawType as Class<*>).isAssignableFrom(Map::class.java)) {
+      if (type is ParameterizedType && !Map::class.java.isAssignableFrom(type.rawType as Class<*>)) {
         return@useCache BigQueryMetadataFactory(
           type.rawType,
           type.actualTypeArguments.first()
@@ -68,13 +77,13 @@ class BigQueryMapperFactory(
       }
       val clazz = type as? Class<*> ?: (type as? ParameterizedType)?.rawType as? Class<*>
       ?: error("Cannot extract type from ${type.typeName}")
-      if (clazz.isAssignableFrom(Map::class.java)) {
-        val valueType = (type as ParameterizedType).actualTypeArguments.last()
+      if (Map::class.java.isAssignableFrom(clazz)) {
+        val valueType = (type as? ParameterizedType)?.actualTypeArguments?.last()
         BigQueryMetadataFactory(
-          clazz, null, if (valueType.typeName == Any::class.qualifiedName)
+          clazz, null, if (valueType?.typeName == Any::class.java.typeName)
             BigQueryStructType() else
             BigQueryStructType(
-              emptyMap(), toMetadataFactory(valueType)
+              emptyMap(), toMetadataFactory(valueType ?: Any::class.java),
             )
         )
       } else BigQueryMetadataFactory(type)
@@ -118,5 +127,16 @@ class BigQueryMapperFactory(
 
   private fun provideNoBigQueryObjectMapper(type: StandardSQLTypeName, target: Type? = null): BigQueryMapper<*>? {
     return (BigQueryPrimitive.from(type, target) ?: BigQueryDate.from(type, target))?.mapper
+  }
+
+  private fun getAllFields(clazz: Class<*>): List<java.lang.reflect.Field> {
+    var current = clazz
+    val fields = mutableListOf<java.lang.reflect.Field>()
+    while (current != Any::class.java) {
+      val currentFields = current.declaredFields
+      fields.addAll(currentFields.toList())
+      current = current.superclass
+    }
+    return fields
   }
 }

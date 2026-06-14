@@ -3,6 +3,7 @@ package pmeig.spring.libraries.jpa.data.bigquery.mapper.factory
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.cloud.bigquery.StandardSQLTypeName
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
@@ -21,6 +22,7 @@ import pmeig.spring.libraries.jpa.shared.helper.array_result
 import pmeig.spring.libraries.jpa.shared.helper.entityTest_schema
 import pmeig.spring.libraries.jpa.shared.helper.struct_field
 import pmeig.spring.libraries.jpa.shared.helper.struct_result
+import java.lang.reflect.ParameterizedType
 import java.time.LocalDateTime
 import kotlin.test.expect
 
@@ -28,6 +30,7 @@ class BigQueryMapperFactoryTest {
 
   private val jsonMapper = mock<ObjectMapper>()
   private val cacheManager = mock<DataCacheManager>()
+  private val parameterizedMock = mock<ParameterizedType>()
   private val bigQueryMapperFactory = BigQueryMapperFactory(jsonMapper, cacheManager)
 
   @BeforeEach
@@ -62,45 +65,105 @@ class BigQueryMapperFactoryTest {
       )
     ) {
       bigQueryMapperFactory.fromSchema(
-        schema, mapOf("struct" to structMetadataFactory_expected()))
+        schema, mapOf("struct" to structMetadataFactory_expected())
+      )
     }
   }
 
-  @Test
-  fun toMetadataFactory_structField() {
-    val structAccessor = generateStructAccessor()
-    expect(structMetadataFactory_expected()) { bigQueryMapperFactory.toMetadataFactory(structAccessor) }
-  }
+  @Nested
+  inner class FromType {
+    @Test
+    fun `generate primitive mapper`() {
+      expect(mapper_primitive_expected(StandardSQLTypeName.STRING, String::class)) {
+        bigQueryMapperFactory.fromType(String::class.java)
+      }
+    }
 
-  @Test
-  fun toMetadataFactory_arrayField() {
-    val arrayAccessor = generateArrayAccessor()
-    expect(arrayMetadataFactory_expected()) {
-      bigQueryMapperFactory.toMetadataFactory(arrayAccessor)
+    @Test
+    fun `generate mapper for collection type`() {
+      whenever(parameterizedMock.rawType).thenReturn(List::class.java)
+      whenever(parameterizedMock.actualTypeArguments).thenReturn(arrayOf(String::class.java))
+      whenever(parameterizedMock.typeName).thenReturn(List::class.java.typeName + "<${String::class.java.typeName}>")
+
+      expect(
+        mapper_object_expected(
+          StandardSQLTypeName.ARRAY,
+          List::class,
+          jsonMapper,
+          mapper_primitive_expected(StandardSQLTypeName.STRING, String::class)
+        )
+      ) {
+        bigQueryMapperFactory.fromType(parameterizedMock)
+      }
     }
   }
 
-  @Test
-  fun factoryFromBigQueryField_REPEATED() {
+  @Nested
+  inner class ToMetadataFactory {
+    @Test
+    fun `generate by struct`() {
+      val structAccessor = generateStructAccessor()
+      expect(structMetadataFactory_expected()) { bigQueryMapperFactory.toMetadataFactory(structAccessor) }
+    }
 
-    val array = array_field()
-    val metadataFactory = arrayMetadataFactory_expected()
+    @Test
+    fun `generate by array`() {
+      val arrayAccessor = generateArrayAccessor()
+      expect(arrayMetadataFactory_expected()) {
+        bigQueryMapperFactory.toMetadataFactory(arrayAccessor)
+      }
+    }
 
-    expect(listOf("first", "second")) {
-      bigQueryMapperFactory.factory(array, metadataFactory).map(array_result())
+    @Test
+    fun `generate by map with value Any`() {
+      whenever(parameterizedMock.rawType).thenReturn(Map::class.java)
+      whenever(parameterizedMock.actualTypeArguments).thenReturn(arrayOf(String::class.java, Any::class.java))
+      expect(BigQueryMetadataFactory(Map::class.java, null, BigQueryStructType())) {
+        bigQueryMapperFactory.toMetadataFactory(parameterizedMock)
+      }
+    }
+
+    @Test
+    fun `generate by map with value String`() {
+      whenever(parameterizedMock.rawType).thenReturn(Map::class.java)
+      whenever(parameterizedMock.actualTypeArguments).thenReturn(arrayOf(String::class.java, String::class.java))
+      expect(
+        BigQueryMetadataFactory(
+          Map::class.java, null, BigQueryStructType(
+            emptyMap(), BigQueryMetadataFactory(
+              String::class.java
+            )
+          )
+        )
+      ) {
+        bigQueryMapperFactory.toMetadataFactory(parameterizedMock)
+      }
     }
   }
 
-  @Test
-  fun factoryFromBigQueryField_STRUCT() {
-    val structField = struct_field()
-    val metadataFactory = structMetadataFactory_expected()
+  @Nested
+  inner class Factory {
+    @Test
+    fun `from BigQueryField is repeated`() {
 
-    expect(mapOf("name" to "name", "age" to 1, "size" to 2L)) {
-      bigQueryMapperFactory.factory(structField, metadataFactory)
-        .map(struct_result())
+      val array = array_field()
+      val metadataFactory = arrayMetadataFactory_expected()
+
+      expect(listOf("first", "second")) {
+        bigQueryMapperFactory.factory(array, metadataFactory).map(array_result())
+      }
     }
 
-  }
+    @Test
+    fun `from BigQueryField is struct`() {
+      val structField = struct_field()
+      val metadataFactory = structMetadataFactory_expected()
 
+      expect(mapOf("name" to "name", "age" to 1, "size" to 2L)) {
+        bigQueryMapperFactory.factory(structField, metadataFactory)
+          .map(struct_result())
+      }
+
+    }
+  }
 }

@@ -36,15 +36,12 @@ import java.time.Instant
 import java.util.Optional
 import java.util.function.Function
 
-typealias ID = Any
-typealias Entity = Any
-
-@Suppress("SpringDataMethodInconsistencyInspection")
-class SimpleJpaBigQueryRepository(
+@Suppress("UNCHECKED_CAST")
+class SimpleJpaBigQueryRepository<Entity: Any, ID: Any>(
   private val client: BigQueryClient,
   private val cacheManager: DataCacheManager,
   entityAnnotationReader: EntityAnnotationReader,
-  clazz: Class<Entity>
+  clazz: Class<*>
 ): JpaRepository<Entity, ID>, JpaSpecificationExecutor<Entity>, JpaMethodInvoker {
 
   private val metadata: DataMetadata = entityAnnotationReader.metadata(clazz)
@@ -110,7 +107,7 @@ class SimpleJpaBigQueryRepository(
   @Deprecated("Use getReferenceById instead")
   override fun getById(id: ID): Entity = getReferenceById(id)
 
-  override fun getReferenceById(id: ID): Entity = findById(id).orElseThrow { EntityNotFoundException() }
+  override fun getReferenceById(id: ID): Entity = findById(id).orElseThrow { EntityNotFoundException() } as Entity
 
   @Suppress("UNCHECKED_CAST")
   override fun <S: Entity> findAll(example: Example<S>): List<S> = findAll(example, Sort.unsorted())
@@ -128,7 +125,7 @@ class SimpleJpaBigQueryRepository(
   override fun findAll() = findAll(Sort.unsorted())
 
   override fun findAll(sort: Sort): List<Entity> =
-    client.tryEntities(metadata.reference, addOrder("SELECT * FROM ${metadata.table}", sort))
+    client.tryEntities(metadata.reference, addOrder("SELECT * FROM ${metadata.table}", sort)) as List<Entity>
 
   override fun findAll(pageable: Pageable): Page<Entity> = executePageableQuery(pageable, count())
 
@@ -167,7 +164,7 @@ class SimpleJpaBigQueryRepository(
         "ids",
         QueryParameterValue.array(ids.map { id -> idToString(id) }.toTypedArray(), StandardSQLTypeName.STRING)
       )
-    }
+    } as List<Entity>
   }
 
   override fun <S: Entity> save(entity: S): S {
@@ -180,13 +177,13 @@ class SimpleJpaBigQueryRepository(
     } ?: throw EntityNotFoundException()
   }
 
-  override fun findById(id: ID): Optional<in Entity> = Optional.ofNullable(
+  override fun findById(id: ID): Optional<Entity> = Optional.ofNullable(
     client.tryEntity(
       metadata.reference.kotlin,
       "SELECT * FROM ${metadata.table} WHERE $idColumns = @id"
     ) {
       it.addNamedParameter("id", QueryParameterValue.string(idToString(id)))
-    })
+    }) as Optional<Entity>
 
   override fun existsById(id: ID): Boolean = findById(id).isPresent
 
@@ -282,7 +279,7 @@ class SimpleJpaBigQueryRepository(
     sort: Sort
   ): List<Entity> {
     return fromSpecification(spec).let {
-      client.tryEntity(metadata.reference.kotlin, addOrder(it.sql, sort)) { builder ->
+      client.tryEntities(metadata.reference.kotlin, addOrder(it.sql, sort)) { builder ->
         applyExampleParameters(it.parameters, builder)
       } as List<Entity>
     }
@@ -377,7 +374,7 @@ class SimpleJpaBigQueryRepository(
     sql: String
   ): String {
     val afterFrom = sql.substringAfter(" from ")
-    return " FROM " + metadata.table + " " + afterFrom.substringAfter(" ")
+    return " FROM ${metadata.table} " + afterFrom.substringAfter(" ")
   }
 
   private fun <S: Entity> insertTmpTable(entities: List<S>, tableName: String) {
@@ -403,7 +400,7 @@ class SimpleJpaBigQueryRepository(
   }
 
   private fun <S: Entity> createTemporaryTable(entity: S): String {
-    val tableName = "`${metadata.table}_${Instant.now(Clock.systemUTC()).toEpochMilli()}`"
+    val tableName = "${metadata.table.substringBeforeLast('`')}_${Instant.now(Clock.systemUTC()).toEpochMilli()}`"
     val createTableQuery = """
       CREATE TEMP TABLE $tableName  AS 
       (SELECT ${metadata.columns.all.keys.joinToString(",") { "@$it as $it" }})
