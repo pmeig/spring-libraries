@@ -84,6 +84,7 @@ jobs:
         run: |
           git config --global user.email "cicd@pmeig.com"
           git config --global user.name "Pmeig CICD"
+          git fetch
           checkoutOption=''
           pushOption=''
           
