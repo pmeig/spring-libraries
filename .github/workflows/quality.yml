@@ -90,7 +90,9 @@ jobs:
           
           branchName="sonar/${{ github.sha }}"
           
-          if [ -z "$(git branch -r | grep $branchName)" ]
+          git branch -r
+          
+          if [ -z "$(git branch -r | grep -- "$branchName")" ]
           then
             checkoutOption='-b'
             pushOption="-u origin $branchName"
