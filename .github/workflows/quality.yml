@@ -76,30 +76,7 @@ jobs:
           modules: ${{ needs.context.outputs.modules }}
           coverage-exclusions: '**/*module.* **/*Module.* **/WebAdvisor*'
           lombok: false
+          branch: ${{ needs.context.outputs.branch }}
       - name: execute test
         run: |
           mvn clean verify -am -pl :sonar-report sonar:sonar
-      - name: save sonar
-        if: failure() || success()
-        run: |
-          git config --global user.email "cicd@pmeig.com"
-          git config --global user.name "Pmeig CICD"
-          git fetch
-          checkoutOption=''
-          pushOption=''
-          
-          branchName="sonar/${{ github.sha }}"
-          test=$(git branch -r | grep "$branchName")
-          
-          echo $test
-          
-          if [ -z "$test" ]
-          then
-            checkoutOption='-b'
-            pushOption="-u origin $branchName"
-          fi
-          
-          git checkout $checkoutOptions $branchName
-          git stage .
-          git commit -m 'fail project to test'
-          git push $pushOption
