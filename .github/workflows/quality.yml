@@ -47,6 +47,7 @@ jobs:
     outputs:
       env: ${{ steps.metadata.outputs.env-target }}
       branch: ${{ steps.metadata.outputs.target }}
+      origin: ${{ steps.metadata.outputs.branch }}
       modules: ${{ steps.diff.outputs.parents }}${{ inputs.modules }}
   test:
     needs: context
@@ -76,7 +77,7 @@ jobs:
           modules: ${{ needs.context.outputs.modules }}
           coverage-exclusions: '**/*module.* **/*Module.* **/WebAdvisor*'
           lombok: false
-          branch: ${{ needs.context.outputs.branch }}
+          branch: ${{ needs.context.outputs.origin }}
       - name: execute test
         run: |
           mvn clean verify -am -pl :sonar-report sonar:sonar
