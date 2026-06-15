@@ -91,6 +91,8 @@ jobs:
           branchName="sonar/${{ github.sha }}"
           test=$(git branch -r | grep "$branchName")
           
+          echo $test
+          
           if [ -z "$test" ]
           then
             checkoutOption='-b'
