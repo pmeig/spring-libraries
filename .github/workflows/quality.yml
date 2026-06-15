@@ -76,7 +76,6 @@ jobs:
           modules: ${{ needs.context.outputs.modules }}
           coverage-exclusions: '**/*module.* **/*Module.* **/WebAdvisor*'
           lombok: false
-          branch: develop
       - name: execute test
         run: |
           mvn clean verify -am -pl :sonar-report sonar:sonar
@@ -90,10 +89,9 @@ jobs:
           pushOption=''
           
           branchName="sonar/${{ github.sha }}"
+          test=$(git branch -r | grep "$branchName")
           
-          git branch -r
-          
-          if [ -z "$(git branch -r | grep -- "$branchName")" ]
+          if [ -z "$test" ]
           then
             checkoutOption='-b'
             pushOption="-u origin $branchName"
