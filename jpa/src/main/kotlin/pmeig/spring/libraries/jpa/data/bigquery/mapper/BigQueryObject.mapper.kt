@@ -137,7 +137,6 @@ private class BigQueryStructMapper(private val mappers: Map<String, BigQueryMapp
     return mappers.hashCode()
   }
 
-
 }
 
 internal enum class BigQueryObjectMapper(
@@ -167,7 +166,8 @@ internal enum class BigQueryObjectMapper(
     fun from(type: StandardSQLTypeName, target: Type? = null): BigQueryObjectMapper? =
       target?.let { clazzType ->
         val clazz = (if (clazzType is ParameterizedType) clazzType.rawType else clazzType) as Class<*>
-        entries.find { it.type == type && (it.target as Class<*>).isAssignableFrom(clazz) } }
+        entries.find { it.type == type && (it.target as Class<*>).isAssignableFrom(clazz) }
+      }
         ?: entries.find { it.type == type }
 
     fun from(target: Type): BigQueryObjectMapper? {
