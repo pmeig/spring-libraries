@@ -2,9 +2,10 @@ package pmeig.spring.libraries.jpa.data.bigquery.client
 
 import com.google.cloud.bigquery.BigQuery
 import com.google.cloud.bigquery.Field
-import com.google.cloud.bigquery.JobException
+import com.google.cloud.bigquery.FieldValueList
 import com.google.cloud.bigquery.JobId
 import com.google.cloud.bigquery.JobInfo
+import com.google.cloud.bigquery.LegacySQLTypeName
 import com.google.cloud.bigquery.QueryJobConfiguration
 import com.google.cloud.bigquery.Schema
 import com.google.cloud.bigquery.StandardSQLTypeName
@@ -15,13 +16,14 @@ import com.google.cloud.bigquery.TableId
 import com.google.cloud.bigquery.TableInfo
 import com.google.cloud.bigquery.TableResult
 import com.google.cloud.spring.autoconfigure.bigquery.GcpBigQueryProperties
+import org.junit.jupiter.api.Assertions.assertInstanceOf
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.firstValue
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -30,6 +32,12 @@ import pmeig.spring.libraries.jpa.core.cache.DataCacheManager
 import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQuerySqlMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperFactory
+import pmeig.spring.libraries.jpa.shared.helper.createField
+import pmeig.spring.libraries.jpa.shared.helper.entityTest_fields
+import pmeig.spring.libraries.jpa.shared.helper.entityTest_result
+import pmeig.spring.libraries.jpa.shared.helper.single_field
+import pmeig.spring.libraries.jpa.shared.helper.single_result
+import pmeig.spring.libraries.jpa.shared.model.EntityTest
 import java.time.Duration
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -54,9 +62,9 @@ class BigQueryClientTest {
   private class ClientDependencies {
     val bigQuery = mock<BigQuery>()
     val jobIdBuilder = mock<JobId.Builder>()
-    val entityAnnotationReader = mock<EntityAnnotationReader>()
     val bigQuerySqlMapper = BigQuerySqlMapper()
     val cacheManager = mock<DataCacheManager>()
+    val entityAnnotationReader = EntityAnnotationReader(cacheManager)
     val mapperFactory = mock<BigQueryMapperFactory>()
   }
 
@@ -173,23 +181,13 @@ class BigQueryClientTest {
       verify(clientDependencies.bigQuery).create(any<JobInfo>())
       verify(clientDependencies.bigQuery).query(any<QueryJobConfiguration>(), any<JobId>())
     }
-  }
-
-  @Nested
-  inner class TryExecutable {
-    private val result = mock<TableResult>()
-    @Test
-    fun `tryExecutable returns null on exception`() {
-      doThrow(JobException::class)
-        .whenever(clientDependencies.bigQuery).query(any(), any<JobId>())
-      assertNull(client.tryQuery("select 1"))
-    }
 
     @Test
     fun `query use custom configurator`() {
       val configuratorCatcher = ArgumentCaptor.forClass(QueryJobConfiguration::class.java)
       whenever(clientDependencies.bigQuery.query(configuratorCatcher.capture(), any<JobId>()))
         .thenReturn(result)
+
       assertSame(result, client.query("select 1") { it.setQuery("SELECT 2") })
       assertEquals("SELECT 2", configuratorCatcher.firstValue.query)
     }
@@ -199,6 +197,7 @@ class BigQueryClientTest {
       val configuratorCatcher = ArgumentCaptor.forClass(QueryJobConfiguration::class.java)
       whenever(clientDependencies.bigQuery.query(configuratorCatcher.capture(), any<JobId>()))
         .thenReturn(result)
+
       assertSame(result, client.tryQuery("select 1") { it.setQuery("SELECT 2") })
       assertEquals("SELECT 2", configuratorCatcher.firstValue.query)
     }
@@ -209,19 +208,86 @@ class BigQueryClientTest {
 
     private val result = mock<TableResult>()
 
+    @BeforeEach
+    fun setUp() {
+      whenever(clientDependencies.bigQuery.query(any<QueryJobConfiguration>(),
+        any<JobId>())
+      ).thenReturn(result)
+      whenever(result.iterateAll())
+        .thenReturn(listOf(FieldValueList.of(listOf(entityTest_result()), createField("entity",
+          LegacySQLTypeName.RECORD, *entityTest_fields().toTypedArray()))))
+    }
+
+    @Nested
+    inner class Single {
+      @BeforeEach
+      fun setUp() {
+        whenever(result.iterateAll())
+          .thenReturn(listOf(FieldValueList.of(listOf(single_result()), single_field())))
+      }
+
+      @Test
+      fun `batchSingle returns entity`() {
+        val actual = client.batchSingle(Long::class, "select 1")
+
+        assertNotNull(actual)
+        assertInstanceOf(Long::class.javaObjectType, actual)
+      }
+
+      @Test
+      fun `tryBatchSingle returns entity`() {
+        whenever(clientDependencies.bigQuery.create(any<JobInfo>())).thenReturn(mock())
+
+        val actual = client.tryBatchSingle(Long::class, "select 1")
+
+        assertNotNull(actual)
+        assertInstanceOf(Long::class.javaObjectType, actual)
+      }
+    }
+
+    @Test
+    fun `batchEntity returns entity`() {
+      val actual = client.batchEntity(EntityTest::class, "select 1")
+
+      assertNotNull(actual)
+      assertInstanceOf(EntityTest::class.java, actual)
+    }
+
+    @Test
+    fun `tryBatchEntity returns entity`() {
+      whenever(clientDependencies.bigQuery.create(any<JobInfo>())).thenReturn(mock())
+
+      val actual = client.tryBatchEntity(EntityTest::class, "select 1")
+
+      assertNotNull(actual)
+      assertInstanceOf(EntityTest::class.java, actual)
+    }
+
+    @Test
+    fun `batchRecord returns Map`() {
+
+      val actual = client.batchRecord("select 1")
+
+      assertNotNull(actual)
+      assertInstanceOf(Map::class.java, actual)
+    }
+
+    @Test
+    fun `tryBatchRecord returns Map`() {
+      whenever(clientDependencies.bigQuery.create(any<JobInfo>())).thenReturn(mock())
+
+      val actual = client.tryBatchRecord("select 1")
+
+      assertNotNull(actual)
+      assertInstanceOf(Map::class.java, actual)
+
+    }
+
     @Test
     fun `batch methods reuse query path`() {
       whenever(clientDependencies.bigQuery.query(any<QueryJobConfiguration>(), any<JobId>())).thenReturn(result)
 
       assertEquals(result, client.batch("select 1"))
-      verify(clientDependencies.bigQuery).query(any<QueryJobConfiguration>(), any<JobId>())
-    }
-
-    @Test
-    fun `batch helpers delegate to batch configurator`() {
-      whenever(clientDependencies.bigQuery.query(any<QueryJobConfiguration>(), any<JobId>())).thenReturn(result)
-
-      client.batchJson("select 1")
       verify(clientDependencies.bigQuery).query(any<QueryJobConfiguration>(), any<JobId>())
     }
   }

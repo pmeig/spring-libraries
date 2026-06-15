@@ -9,6 +9,15 @@ import com.google.cloud.bigquery.Schema
 
 private val cache = mutableMapOf<String, Any>()
 
+
+fun single_field() = getField("single_field") {
+  createField("result", LegacySQLTypeName.INTEGER)
+}
+
+fun single_result() = getField("single_result") {
+  FieldValue.of(FieldValue.Attribute.PRIMITIVE, "1")
+}
+
 fun struct_field() = getField("struct_field") {
   createField("struct", LegacySQLTypeName.RECORD,
     createField("name", LegacySQLTypeName.STRING),
