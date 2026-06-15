@@ -1,31 +1,29 @@
 package pmeig.spring.libraries.security.core.crypto
 
+import org.springframework.security.crypto.codec.Hex
+import org.springframework.security.crypto.encrypt.AesBytesEncryptor
 import org.springframework.stereotype.Service
-import kotlin.io.encoding.Base64
 
 @Service
-class CryptoService(private val cryptoProperties: CryptoProperties) {
+class CryptoService(
+  cryptoProperties: CryptoProperties,
+) {
+
+  private val encryptor = createAESEncryptor(cryptoProperties)
+
   fun encrypt(value: String?): String {
     if (value.isNullOrEmpty()) return ""
-    val secret = cryptoProperties.secret.toByteArray()
-    val max = secret.size
-    var index = 0
-    val bytes = value.toByteArray()
-    val encrypted = bytes.map {
-      (it + secret[index++ % max]).toByte()
-    }.toByteArray()
-    return Base64.encode(encrypted)
+    return Hex.encode(encryptor.encrypt(value.toByteArray())).concatToString()
   }
 
   fun decrypt(value: String?): String {
     if (value.isNullOrEmpty()) return ""
-    val secret = cryptoProperties.secret.toByteArray()
-    val max = secret.size
-    val decoded = Base64.decode(value)
-    var index = 0
-    return decoded.map {
-      (it - secret[index++ % max]).toByte()
-    }.toByteArray().toString(Charsets.UTF_8)
+    return encryptor.decrypt(Hex.decode(value)).decodeToString()
   }
+
+  private fun createAESEncryptor(cryptoProperties: CryptoProperties): AesBytesEncryptor = AesBytesEncryptor(
+    cryptoProperties.secret,
+    cryptoProperties.salt
+  )
 
 }
