@@ -76,6 +76,7 @@ jobs:
           modules: ${{ needs.context.outputs.modules }}
           coverage-exclusions: '**/*module.* **/*Module.* **/WebAdvisor*'
           lombok: false
+          branch: ${{ needs.context.outputs.branch }}
       - name: execute test
         run: |
           mvn clean verify -am -pl :sonar-report sonar:sonar
