@@ -125,6 +125,7 @@ abstract class BigQueryMultiClient(
       TableResult.newBuilder()
         .setSchema(Schema.of(tableResult.schema!!.fields["items"].subFields))
         .setPageNoSchema(BigQueryPage(items))
+        .setTotalRows(items.size.toLong())
         .build()
     }!!
     return PageImpl(entities, pageable, total)

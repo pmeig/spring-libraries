@@ -1,11 +1,11 @@
 package pmeig.spring.libraries.jpa.data.bigquery.client
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.cloud.bigquery.BigQuery
 import com.google.cloud.bigquery.Field
 import com.google.cloud.bigquery.FieldValueList
 import com.google.cloud.bigquery.JobId
 import com.google.cloud.bigquery.JobInfo
-import com.google.cloud.bigquery.LegacySQLTypeName
 import com.google.cloud.bigquery.QueryJobConfiguration
 import com.google.cloud.bigquery.Schema
 import com.google.cloud.bigquery.StandardSQLTypeName
@@ -32,14 +32,15 @@ import pmeig.spring.libraries.jpa.core.cache.DataCacheManager
 import pmeig.spring.libraries.jpa.core.entity.EntityAnnotationReader
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.BigQuerySqlMapper
 import pmeig.spring.libraries.jpa.data.bigquery.mapper.factory.BigQueryMapperFactory
-import pmeig.spring.libraries.jpa.shared.helper.createField
-import pmeig.spring.libraries.jpa.shared.helper.entityTest_fields
+import pmeig.spring.libraries.jpa.shared.expected.entity_test_expected
 import pmeig.spring.libraries.jpa.shared.helper.entityTest_result
+import pmeig.spring.libraries.jpa.shared.helper.entityTest_schema
 import pmeig.spring.libraries.jpa.shared.helper.single_field
 import pmeig.spring.libraries.jpa.shared.helper.single_result
 import pmeig.spring.libraries.jpa.shared.model.EntityTest
 import java.time.Duration
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
@@ -65,7 +66,7 @@ class BigQueryClientTest {
     val bigQuerySqlMapper = BigQuerySqlMapper()
     val cacheManager = mock<DataCacheManager>()
     val entityAnnotationReader = EntityAnnotationReader(cacheManager)
-    val mapperFactory = mock<BigQueryMapperFactory>()
+    val mapperFactory = BigQueryMapperFactory(ObjectMapper(), cacheManager)
   }
 
   @BeforeEach
@@ -213,9 +214,9 @@ class BigQueryClientTest {
       whenever(clientDependencies.bigQuery.query(any<QueryJobConfiguration>(),
         any<JobId>())
       ).thenReturn(result)
+      whenever(result.schema).thenReturn(entityTest_schema())
       whenever(result.iterateAll())
-        .thenReturn(listOf(FieldValueList.of(listOf(entityTest_result()), createField("entity",
-          LegacySQLTypeName.RECORD, *entityTest_fields().toTypedArray()))))
+        .thenReturn(listOf(entityTest_result()))
     }
 
     @Nested
@@ -250,7 +251,8 @@ class BigQueryClientTest {
       val actual = client.batchEntity(EntityTest::class, "select 1")
 
       assertNotNull(actual)
-      assertInstanceOf(EntityTest::class.java, actual)
+      assertIs<EntityTest>(actual)
+      assertEquals(entity_test_expected(), actual)
     }
 
     @Test
@@ -260,7 +262,8 @@ class BigQueryClientTest {
       val actual = client.tryBatchEntity(EntityTest::class, "select 1")
 
       assertNotNull(actual)
-      assertInstanceOf(EntityTest::class.java, actual)
+      assertIs<EntityTest>(actual)
+      assertEquals(entity_test_expected(), actual)
     }
 
     @Test
@@ -269,7 +272,7 @@ class BigQueryClientTest {
       val actual = client.batchRecord("select 1")
 
       assertNotNull(actual)
-      assertInstanceOf(Map::class.java, actual)
+      assertIs<Map<String, Any?>>(actual)
     }
 
     @Test
@@ -279,7 +282,7 @@ class BigQueryClientTest {
       val actual = client.tryBatchRecord("select 1")
 
       assertNotNull(actual)
-      assertInstanceOf(Map::class.java, actual)
+      assertIs<Map<String, Any?>>(actual)
 
     }
 

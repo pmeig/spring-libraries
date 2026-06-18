@@ -79,6 +79,16 @@ open class FieldAccessorWrapper<T>(val field: Field,
     field.isAccessible = true
     getter = MethodGetter<T>(field).let { if (it.isReadable()) it::get else { entity: Any? -> field[entity] as T? } }
     setter = MethodSetter<T>(field).let { if(it.isWritable()) it::set else ({ entity: Any?, value: T? -> field[entity] = value }) }
+    if (struct.isNotEmpty()) {
+      val originSetter = setter
+      setter = { entity, value ->
+        if (value is Map<*, *>) {
+          (value as Map<String, Any?>).entries.forEach { entry ->
+            (struct[entry.key] as FieldAccessor<Any?>?)?.set(entity, entry.value)
+          }
+        } else originSetter(entity, value)
+      }
+    }
   }
   override fun get(entity: Any?): T? = getter(entity)
   override fun set(entity: Any?, value: T?) = setter(entity, value)
@@ -127,9 +137,8 @@ class ParentFieldAccessor<T>(private val parent: Field, private val child: Field
     return entity?.let {
       var parentValue = super.get(it) as Any?
       if (null == parentValue) {
-        parentValue = parent.type.declaredConstructors.find { constructor -> constructor.parameterCount == 0 }?.newInstance()?.apply {
-          super.set(entity, parentValue)
-        }
+        parentValue = parent.type.declaredConstructors.find { constructor -> constructor.parameterCount == 0 }?.newInstance()
+        super.set(entity, parentValue as T?)
       }
       parentValue
     }
