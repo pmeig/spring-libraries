@@ -14,20 +14,27 @@ class BigQuerySqlMapper {
   fun pageQuery(query: String,
                   pageable: Pageable,
                   metadata: DataMetadata): String {
+    val sqlWithoutSelector = removeSelector(query)
+    if (pageable.isUnpaged) {
+      return """
+         WITH __count AS (SELECT COUNT(${metadata.primary.fromID.keys.joinToString(",")}) as count $sqlWithoutSelector), 
+      __result AS ($query)
+      SELECT ARRAY_AGG(items) AS items, ANY_VALUE(__count.count) AS total FROM __count, __result items
+      """
+    }
     val orderBy = extractOrderBy(query, metadata)
     val limit = extractLimit(query, pageable)
     val offset = extractOffset(query, pageable)
-    val sqlWithoutSelector = removeSelector(query)
     return """
       WITH __count AS (SELECT COUNT(${metadata.primary.fromID.keys.joinToString(",")}) as count $sqlWithoutSelector), 
-      __result AS (${extractQueryWithoutOrderLimitAndOffset(sqlWithoutSelector, orderBy, limit, offset)})
+      __result AS (${extractQueryWithoutOrderLimitAndOffset(query, orderBy, limit, offset)})
       SELECT ARRAY_AGG(items) AS items, ANY_VALUE(__count.count) AS total FROM __count, __result items
     """.trimIndent()
   }
 
   private fun removeSelector(query: String): String {
     val index = query.indexOf(" FROM ", ignoreCase = true)
-    return if (index > -1) query.substring(index) else query
+    return if (index > -1) query.substring(index + 1) else query
   }
 
   private fun extractQueryWithoutOrderLimitAndOffset(

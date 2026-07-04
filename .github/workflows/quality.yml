@@ -42,8 +42,6 @@ jobs:
           origin: ${{ steps.metadata.outputs.branch }}
           target: ${{ steps.metadata.outputs.target }}
           parent: 'true'
-
-
     outputs:
       env: ${{ steps.metadata.outputs.env-target }}
       branch: ${{ steps.metadata.outputs.target }}
@@ -80,3 +78,14 @@ jobs:
       - name: execute test
         run: |
           mvn clean verify -am -pl :sonar-report sonar:sonar
+      - name: create branch
+        if: failure()
+        run: |
+          git switch -C 'sonar/${{ needs.context.outputs.origin }}'
+      - name: save branch
+        if: failure()
+        uses: pmeig/github-actions/actions/github/push@main
+        with:
+          commit: save config sonar
+          stage: .
+          

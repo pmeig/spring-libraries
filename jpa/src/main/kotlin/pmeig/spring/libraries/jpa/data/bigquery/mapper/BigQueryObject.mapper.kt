@@ -14,7 +14,8 @@ import kotlin.reflect.KClass
 @Suppress("UNCHECKED_CAST")
 private fun arrayParameterConverter(value: Any?): QueryParameterValue? {
   if (null == value) return null
-  var param: Array<*>? = if (ClassUtils.getUserClass(value).isArray) value as Array<*> else null
+  val clazz = ClassUtils.getUserClass(value)
+  var param: Array<*>? = if (clazz.isArray) value as Array<*> else null
   if (null == param) {
     if (value is Collection<*>) {
       param = value.toTypedArray()
@@ -22,15 +23,18 @@ private fun arrayParameterConverter(value: Any?): QueryParameterValue? {
       param = value.toList().toTypedArray()
     }
   }
-  return param?.let {
-    val type = ClassUtils.getUserClass(it).componentType as Class<Any>
-    QueryParameterValue.array(it, type)
+  if (param?.isEmpty() ?: true) {
+    return null
+  }
+  return param.let {
+    val type = it.first()!!
+    QueryParameterValue.array(it, type.javaClass)
   }
 }
 
 private class BigQueryJsonMapper(private val jsonMapper: ObjectMapper): BigQueryMapper<Map<String, Any?>> {
   override fun map(value: FieldValue?): Map<String, Any?>? =
-    value?.stringValue?.let { jsonMapper.convertValue(it, object: TypeReference<Map<String, Any?>>() {}) }
+    value?.stringValue?.let { jsonMapper.readValue(it, object: TypeReference<Map<String, Any?>>() {}) }
 
   override fun parameter(value: Any?): QueryParameterValue? = if (value is JsonObject) QueryParameterValue.json(value)
   else value?.let { QueryParameterValue.json(jsonMapper.writeValueAsString(it)) }
