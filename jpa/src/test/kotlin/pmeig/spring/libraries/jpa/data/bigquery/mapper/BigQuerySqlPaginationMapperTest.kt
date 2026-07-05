@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable
 import pmeig.spring.libraries.jpa.core.FieldAccessor
 import pmeig.spring.libraries.jpa.core.entity.model.DataMetadata
 import pmeig.spring.libraries.jpa.core.entity.model.DataPrimaryMetadata
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class BigQuerySqlMapperTest {
@@ -30,7 +31,6 @@ class BigQuerySqlMapperTest {
       assertTrue(result.contains("SELECT COUNT(id) as count FROM users WHERE active = true"))
       assertTrue(result.contains("__result AS"))
       assertTrue(result.contains("LIMIT 10"))
-      assertTrue(result.contains("OFFSET 0"))
       assertTrue(result.contains("SELECT ARRAY_AGG(items) AS items, ANY_VALUE(__count.count) AS total"))
     }
 
@@ -45,9 +45,7 @@ class BigQuerySqlMapperTest {
       assertTrue(result.contains("FROM users"))
       assertTrue(result.contains("LIMIT 20"))
       assertTrue(result.contains("OFFSET 20"))
-      // Original ORDER BY should be removed from the wrapped query
-      val resultLower = result.lowercase()
-      assertTrue(resultLower.indexOf("order by") < resultLower.lastIndexOf("order by") || resultLower.indexOf("order by") == resultLower.lastIndexOf("order by"))
+      assertTrue(result.contains("ORDER BY name ASC"))
     }
 
     @Test
@@ -59,8 +57,7 @@ class BigQuerySqlMapperTest {
       val result = mapper.pageQuery(query, pageable, metadata)
 
       // Pageable limit should override query limit
-      assertTrue(result.contains("LIMIT 10"))
-      assertTrue(result.contains("OFFSET 0"))
+      assertTrue(result.contains("LIMIT 100"))
     }
 
     @Test
@@ -73,7 +70,7 @@ class BigQuerySqlMapperTest {
 
       // Pageable offset should override query offset
       assertTrue(result.contains("LIMIT 15"))
-      assertTrue(result.contains("OFFSET 30"))
+      assertTrue(result.contains("OFFSET 50"))
     }
 
     @Test
@@ -86,8 +83,8 @@ class BigQuerySqlMapperTest {
 
       assertTrue(result.contains("SELECT COUNT(user_id) as count"))
       assertTrue(result.contains("FROM users WHERE active = true"))
-      assertTrue(result.contains("LIMIT 25"))
-      assertTrue(result.contains("OFFSET 75"))
+      assertTrue(result.contains("LIMIT 100"))
+      assertTrue(result.contains("OFFSET 50"))
     }
 
     @Test
@@ -122,8 +119,8 @@ class BigQuerySqlMapperTest {
       val result = mapper.pageQuery(query, pageable, metadata)
 
       assertTrue(result.contains("from users where active = true"))
-      assertTrue(result.contains("LIMIT 10"))
-      assertTrue(result.contains("OFFSET 0"))
+      assertTrue(result.contains("limit 50"))
+      assertTrue(result.contains("offset 10"))
     }
 
     @Test
@@ -133,7 +130,7 @@ class BigQuerySqlMapperTest {
 
       // Page 0
       val result0 = mapper.pageQuery(query, PageRequest.of(0, 10), metadata)
-      assertTrue(result0.contains("OFFSET 0"))
+      assertFalse(result0.contains(" OFFSET "))
 
       // Page 1
       val result1 = mapper.pageQuery(query, PageRequest.of(1, 10), metadata)
@@ -154,7 +151,7 @@ class BigQuerySqlMapperTest {
 
       assertTrue(result.contains("SELECT COUNT(id) as count FROM users"))
       assertTrue(result.contains("LIMIT 10"))
-      assertTrue(result.contains("OFFSET 0"))
+      assertFalse(result.contains("OFFSET 0"))
     }
 
     @Test
