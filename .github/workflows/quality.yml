@@ -82,6 +82,7 @@ jobs:
         if: failure()
         run: |
           git switch -C 'sonar/${{ needs.context.outputs.origin }}'
+          git pull 2> /dev/null
       - name: save branch
         if: failure()
         uses: pmeig/github-actions/actions/github/push@main
