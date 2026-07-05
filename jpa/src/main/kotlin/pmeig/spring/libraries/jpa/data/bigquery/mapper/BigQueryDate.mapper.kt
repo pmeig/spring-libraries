@@ -18,7 +18,7 @@ import kotlin.reflect.KClass
 
 private class BigQueryDateMapper : BigQueryMapper<LocalDate> {
   private val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-  override fun map(value: FieldValue?): LocalDate? = value?.timestampInstant?.let { LocalDate.from(it) }
+  override fun map(value: FieldValue?): LocalDate? = value?.stringValue?.let { LocalDate.from(dateFormat.parse(it)) }
   override fun parameter(value: Any?): QueryParameterValue? {
     return value?.let {
       it as? LocalDate
@@ -47,17 +47,18 @@ private class BigQueryInstantMapper : BigQueryMapper<Instant> {
 }
 
 private class BigQueryTimeMapper : BigQueryMapper<LocalTime> {
-  override fun map(value: FieldValue?): LocalTime? = value?.timestampInstant?.let { LocalTime.from(it) }
+  private val timeFormat = DateTimeFormatter.ofPattern("HH:mm:ss[.SSSSSS]")
+  override fun map(value: FieldValue?): LocalTime? = value?.stringValue?.let { LocalTime.parse(it, timeFormat) }
   override fun parameter(value: Any?): QueryParameterValue? {
     return value?.let {
       it as? LocalTime
-    }?.let { QueryParameterValue.time("${it.hour}:${it.minute}:${it.second}") }
+    }?.let { QueryParameterValue.time(timeFormat.format(it)) }
   }
 }
 
 private class BigQueryDateTimeMapper : BigQueryMapper<LocalDateTime> {
-  private val dateFormat = DateTimeFormatter.ISO_DATE_TIME
-  override fun map(value: FieldValue?): LocalDateTime? = value?.timestampInstant?.let { LocalDateTime.from(it) }
+  private val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss[.SSSSSS]")
+  override fun map(value: FieldValue?): LocalDateTime? = value?.stringValue?.let { LocalDateTime.parse(it, dateFormat) }
   override fun parameter(value: Any?): QueryParameterValue? = value?.let {
     it as? LocalDateTime
   }?.let { return QueryParameterValue.timestamp(dateFormat.format(it)) }

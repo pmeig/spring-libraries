@@ -11,6 +11,7 @@ fun createSqlPage(dataMetadata: DataMetadata, pageable: Pageable,
 }
 
 fun addOrder(sql: String, sort: Sort): String {
+  if (sort.isUnsorted) return sql
   return sql + " ORDER BY " + sort.joinToString(",") { it.property + " " + it.direction.name.lowercase() }
 }
 

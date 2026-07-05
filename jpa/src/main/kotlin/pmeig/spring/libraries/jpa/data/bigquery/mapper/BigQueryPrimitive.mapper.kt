@@ -17,24 +17,29 @@ private fun <T: Number> convertToNumber(value: Any?, mapper: (String) -> T): T? 
   }
 }
 
-private class BigQueryStringMapper : BigQueryMapper<String> {
+private class BigQueryStringMapper: BigQueryMapper<String> {
   override fun map(value: FieldValue?): String? = value?.stringValue
 
-  override fun parameter(value: Any?): QueryParameterValue? = value?.let { QueryParameterValue.string(value.toString()) }
+  override fun parameter(value: Any?): QueryParameterValue? =
+    value?.let { QueryParameterValue.string(value.toString()) }
 }
 
 private abstract class BigQueryNumberMapper<T>(
   private val mapper: (Long) -> T
-) : BigQueryMapper<T> {
-  override fun map(value: FieldValue?): T? = value?.longValue?.let { mapper(it) }
-  override fun parameter(value: Any?): QueryParameterValue? = convertToNumber(value, String::toLong)?.let { QueryParameterValue.int64(it) }
+): BigQueryMapper<T> {
+  override fun map(value: FieldValue?): T? = value?.longValue?.let {
+    mapper(it)
+  }
+
+  override fun parameter(value: Any?): QueryParameterValue? =
+    convertToNumber(value, String::toLong)?.let { QueryParameterValue.int64(it) }
 }
 
-private class BigQueryLongMapper : BigQueryNumberMapper<Long>( { it })
-private class BigQueryIntMapper : BigQueryNumberMapper<Int>( { it.toInt() })
-private class BigQueryShortMapper : BigQueryNumberMapper<Short>( { it.toShort() })
+private class BigQueryLongMapper: BigQueryNumberMapper<Long>({ it })
+private class BigQueryIntMapper: BigQueryNumberMapper<Int>({ it.toInt() })
+private class BigQueryShortMapper: BigQueryNumberMapper<Short>({ it.toShort() })
 
-private class BigQueryDoubleMapper : BigQueryMapper<Double> {
+private class BigQueryDoubleMapper: BigQueryMapper<Double> {
   override fun map(value: FieldValue?): Double? = value?.doubleValue
 
   override fun parameter(value: Any?): QueryParameterValue? = convertToNumber(value, String::toDouble)?.let {
@@ -42,7 +47,7 @@ private class BigQueryDoubleMapper : BigQueryMapper<Double> {
   }
 }
 
-private class BigQueryBooleanMapper : BigQueryMapper<Boolean> {
+private class BigQueryBooleanMapper: BigQueryMapper<Boolean> {
   override fun map(value: FieldValue?): Boolean? = value?.booleanValue
   override fun parameter(value: Any?): QueryParameterValue? {
     return value?.let {
@@ -71,9 +76,11 @@ private class BigQueryByteArrayMapper: BigQueryMapper<ByteArray> {
 }
 
 @Suppress("unused")
-internal enum class BigQueryPrimitive(private val type: StandardSQLTypeName,
-                                      target: List<Type>,
-                                      override val mapper: BigQueryMapper<*>): BigQueryMapperProvider {
+internal enum class BigQueryPrimitive(
+  private val type: StandardSQLTypeName,
+  target: List<Type>,
+  override val mapper: BigQueryMapper<*>
+): BigQueryMapperProvider {
   STRING(StandardSQLTypeName.STRING, String::class, BigQueryStringMapper()),
   INT64(StandardSQLTypeName.INT64, Long::class, BigQueryLongMapper()),
   INT64_INTEGER(StandardSQLTypeName.INT64, Int::class, BigQueryIntMapper()),
@@ -87,14 +94,23 @@ internal enum class BigQueryPrimitive(private val type: StandardSQLTypeName,
   companion object {
     fun from(type: StandardSQLTypeName, target: KClass<*>): BigQueryPrimitive? = from(type, target.javaObjectType)
     fun from(type: StandardSQLTypeName, target: Type? = null): BigQueryPrimitive? =
-      target?.let { clazz -> entries.find { it.type == type && clazz.typeName in it.targets } } ?: entries.find { it.type == type }
-    fun from(target: Type): BigQueryPrimitive? = entries.find { it.targets.contains(target.typeName)}
+      target?.let { clazz -> entries.find { it.type == type && clazz.typeName in it.targets } }
+        ?: entries.find { it.type == type }
+
+    fun from(target: Type): BigQueryPrimitive? = entries.find { it.targets.contains(target.typeName) }
   }
 
   private val targets = target.map { it.typeName }
 
-  constructor(type: StandardSQLTypeName, target: KClass<*>, mapper: BigQueryMapper<*>): this(type,
-    listOfNotNull(target.javaObjectType, target.javaPrimitiveType), mapper)
-  constructor(type: StandardSQLTypeName, target: Class<*>, mapper: BigQueryMapper<*>): this(type, listOf(target), mapper)
+  constructor(type: StandardSQLTypeName, target: KClass<*>, mapper: BigQueryMapper<*>): this(
+    type,
+    listOfNotNull(target.javaObjectType, target.javaPrimitiveType), mapper
+  )
+
+  constructor(type: StandardSQLTypeName, target: Class<*>, mapper: BigQueryMapper<*>): this(
+    type,
+    listOf(target),
+    mapper
+  )
 }
 

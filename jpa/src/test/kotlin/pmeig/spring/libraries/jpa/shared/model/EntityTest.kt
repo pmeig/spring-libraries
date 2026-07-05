@@ -21,4 +21,35 @@ class EntityTest(
   var column: String? = null,
   var array: List<String>? = null
 ): AutoIdStateColumns(id, createdBy, created, updatedBy, updated) {
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+    if (!super.equals(other)) return false
+
+    other as EntityTest
+
+    if (struct != other.struct) return false
+    if (secretName != other.secretName) return false
+    if (column != other.column) return false
+    if (array != other.array) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = super.hashCode()
+    result = 31 * result + (struct?.hashCode() ?: 0)
+    result = 31 * result + (secretName?.hashCode() ?: 0)
+    result = 31 * result + (column?.hashCode() ?: 0)
+    result = 31 * result + (array?.hashCode() ?: 0)
+    return result
+  }
+
+  override fun toString(): String {
+    return "EntityTest(struct=$struct, secretName=$secretName, column=$column, array=$array," +
+            " createdBy=$created, updatedBy=$updated, created=$created, updated=$updated, id=$id)"
+  }
+
+
 }

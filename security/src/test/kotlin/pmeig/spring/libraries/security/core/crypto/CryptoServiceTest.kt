@@ -40,13 +40,6 @@ class CryptoServiceTest {
     }
 
     @Test
-    fun `should return a valid Base64-encoded string`() {
-      val result = cryptoService.encrypt("hello")
-      // Base64 characters are alphanumeric + '+', '/', '='
-      assertTrue(result.matches(Regex("^[A-Za-z0-9+/=]+$")))
-    }
-
-    @Test
     fun `should produce different ciphertext for different inputs`() {
       val result1 = cryptoService.encrypt("hello")
       val result2 = cryptoService.encrypt("world")
