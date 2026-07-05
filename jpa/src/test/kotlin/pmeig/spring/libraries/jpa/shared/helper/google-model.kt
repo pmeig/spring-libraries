@@ -61,9 +61,9 @@ fun entityTest_result(): FieldValueList = getField("entity_test_result") {
   FieldValueList.of(listOf(
     FieldValue.of(FieldValue.Attribute.PRIMITIVE, "1"),
     FieldValue.of(FieldValue.Attribute.PRIMITIVE, "created_by"),
-    FieldValue.of(FieldValue.Attribute.PRIMITIVE, "2020-01-01T00:00:00.000Z"),
+    FieldValue.of(FieldValue.Attribute.PRIMITIVE, "2020-01-01 00:00:00.000000"),
     FieldValue.of(FieldValue.Attribute.PRIMITIVE, "updated_by"),
-    FieldValue.of(FieldValue.Attribute.PRIMITIVE, "2020-01-02T00:00:00.000Z"),
+    FieldValue.of(FieldValue.Attribute.PRIMITIVE, "2020-01-02 00:00:00.000000"),
     struct_result(),
     FieldValue.of(FieldValue.Attribute.PRIMITIVE, "secret"),
     array_result()

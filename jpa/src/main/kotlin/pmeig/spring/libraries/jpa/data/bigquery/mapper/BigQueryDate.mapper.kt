@@ -47,7 +47,7 @@ private class BigQueryInstantMapper : BigQueryMapper<Instant> {
 }
 
 private class BigQueryTimeMapper : BigQueryMapper<LocalTime> {
-  private val timeFormat = DateTimeFormatter.ofPattern("HH:mm:ss.SSS")
+  private val timeFormat = DateTimeFormatter.ofPattern("HH:mm:ss[.SSSSSS]")
   override fun map(value: FieldValue?): LocalTime? = value?.stringValue?.let { LocalTime.parse(it, timeFormat) }
   override fun parameter(value: Any?): QueryParameterValue? {
     return value?.let {
@@ -57,7 +57,7 @@ private class BigQueryTimeMapper : BigQueryMapper<LocalTime> {
 }
 
 private class BigQueryDateTimeMapper : BigQueryMapper<LocalDateTime> {
-  private val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
+  private val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss[.SSSSSS]")
   override fun map(value: FieldValue?): LocalDateTime? = value?.stringValue?.let { LocalDateTime.parse(it, dateFormat) }
   override fun parameter(value: Any?): QueryParameterValue? = value?.let {
     it as? LocalDateTime

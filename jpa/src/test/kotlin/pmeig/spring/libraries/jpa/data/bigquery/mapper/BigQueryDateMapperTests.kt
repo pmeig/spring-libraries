@@ -294,11 +294,11 @@ class BigQueryDateMapperTest {
       @Test
       fun `parses time string to LocalTime`() {
         val fieldValue = mock<FieldValue>()
-        whenever(fieldValue.stringValue).thenReturn("14:30:45.123")
+        whenever(fieldValue.stringValue).thenReturn("14:30:45.123456")
 
         val result = mapper.map(fieldValue)
 
-        assertEquals(LocalTime.of(14, 30, 45, 123_000_000), result)
+        assertEquals(LocalTime.of(14, 30, 45, 123_456_000), result)
       }
     }
 
@@ -340,7 +340,7 @@ class BigQueryDateMapperTest {
       @Test
       fun `parses ISO datetime string to LocalDateTime`() {
         val fieldValue = mock<FieldValue>()
-        whenever(fieldValue.stringValue).thenReturn("2024-01-15T14:30:45")
+        whenever(fieldValue.stringValue).thenReturn("2024-01-15 14:30:45.000000")
 
         val result = mapper.map(fieldValue)
 
@@ -560,8 +560,8 @@ class BigQueryDateMapperTest {
 
         @Test
         fun `extracts datetime range as Pair`() {
-          val startDateTime = "2024-01-01T00:00:00"
-          val endDateTime = "2024-01-31T23:59:59"
+          val startDateTime = "2024-01-01 00:00:00.000000"
+          val endDateTime = "2024-01-31 23:59:59.000000"
 
           val startValue = mock<FieldValue>()
           whenever(startValue.stringValue).thenReturn(startDateTime)
