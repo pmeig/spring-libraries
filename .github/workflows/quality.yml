@@ -6,7 +6,7 @@ on:
         description: modules do you want test
         required: false
         default: ''
-  pull_request:
+  pull_request_target:
     types:
       - opened
       - reopened
@@ -69,6 +69,8 @@ jobs:
             pmeig/cicd/data/sonar token | SONAR_TOKEN;
       - name: setup java
         uses: pmeig/github-actions/actions/java/setup@main
+        with:
+          branch: ${{ needs.context.outputs.branch }}-test
       - name: sonar setup
         uses: pmeig/github-actions/actions/java/sonar/setup@main
         with:
