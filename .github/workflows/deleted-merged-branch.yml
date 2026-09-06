@@ -1,0 +1,20 @@
+name: Delete Merged Branch
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  delete-branch:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    permissions:
+      contents: write
+    steps:
+      - id: branch
+        name: retrieve branch to delete
+        uses: pmeig/github-actions/actions/github/branch@main
+      - name: Delete merged branch
+        uses: pmeig/github-actions/actions/github/delete@main
+        with:
+          branch: ${{ steps.branch.outputs.current }}
