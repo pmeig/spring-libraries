@@ -82,5 +82,6 @@ The goal of every test suite is to make execution go through **all** branches an
 - For every functional parameter (lambda, `Runnable`, `Supplier`, callback, higher-order function): the test must force it to actually execute, not just verify it was passed as an argument. Use `doAnswer { it.getArgument<...>(0).invoke() }` or the equivalent to trigger the callback captured by the mock.
 - For any asynchronous code (coroutines, `CompletableFuture`, reactive `Mono`/`Flux`, `@Async`): explicitly await/consume the result (`runTest`/`runBlocking`, `.get()`/`.join()`, `StepVerifier`) rather than letting the test finish before the deferred processing actually runs.
 - Verify side effects with `verify(mock).method(...)` rather than relying only on return-value assertions, when path coverage depends on a call actually being triggered.
+- ne jamais chercher la config jacocco ou sonar elle n'est pas présente.
 
 Before considering a method covered, re-read its code and mentally list every possible branch/execution path, then check that a test exists for each one.
