@@ -25,6 +25,17 @@ Apply the same reflex everywhere:
 - Idiomatic Kotlin: `data class`, `val` by default, avoid `!!` unless the underlying API guarantees non-nullity (as in `SwaggerConfiguration.kt`), extension functions over static utilities.
 - Every new feature must be tested (see the `test/` structure and existing Sonar coverage setup). See [[unit-test-conventions]] for the unit test conventions to follow (Mockito imports, no mock annotations, `@Nested` per method, `should_..._when_...` naming, branch/async coverage).
 
+## Commit message convention
+
+Derive the commit type from the current branch name prefix (case-insensitive):
+
+- Branch starts with `feat` or `features` (e.g. `feat/xxx`, `feature/xxx`, `features/xxx`) → `feat(<main subject>): <description>`
+- Branch starts with `fix`, `bugfix`, or `hotfix` (e.g. `fix/xxx`, `bugfix/xxx`, `hotfix/xxx`) → `fix(<subject>): <description>`
+
+The `<main subject>`/`<subject>` scope is the short topic taken from the branch name (e.g. branch `feat/payment-retry` → `feat(payment-retry): add retry policy on failed webhook calls`; branch `hotfix/auth-crash` → `fix(auth-crash): guard against null session token`). The description is a concise, imperative summary of the change — not a restatement of the branch name.
+
+Apply this convention to every commit message you write, and to PR titles/descriptions when opening or updating a pull request.
+
 ## When a best practice isn't followed
 
 If a user request goes against a standard Spring Boot mechanism while a native alternative exists, point it out and propose the alternative before implementing.
