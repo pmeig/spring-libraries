@@ -21,55 +21,55 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class WithTypeAndKClass {
       @Test
-      fun `returns STRING mapper for String`() {
+      fun should_return_STRING_mapper_when_type_is_STRING_and_target_is_String() {
         val result = BigQueryPrimitive.from(StandardSQLTypeName.STRING, String::class)
         assertEquals(BigQueryPrimitive.STRING, result)
       }
 
       @Test
-      fun `returns INT64 mapper for Long`() {
+      fun should_return_INT64_mapper_when_type_is_INT64_and_target_is_Long() {
         val result = BigQueryPrimitive.from(StandardSQLTypeName.INT64, Long::class)
         assertEquals(BigQueryPrimitive.INT64, result)
       }
 
       @Test
-      fun `returns INT64_INTEGER mapper for Int`() {
+      fun should_return_INT64_INTEGER_mapper_when_type_is_INT64_and_target_is_Int() {
         val result = BigQueryPrimitive.from(StandardSQLTypeName.INT64, Int::class)
         assertEquals(BigQueryPrimitive.INT64_INTEGER, result)
       }
 
       @Test
-      fun `returns INT64_SHORT mapper for Short`() {
+      fun should_return_INT64_SHORT_mapper_when_type_is_INT64_and_target_is_Short() {
         val result = BigQueryPrimitive.from(StandardSQLTypeName.INT64, Short::class)
         assertEquals(BigQueryPrimitive.INT64_SHORT, result)
       }
 
       @Test
-      fun `returns FLOAT64 mapper for Double`() {
+      fun should_return_FLOAT64_mapper_when_type_is_FLOAT64_and_target_is_Double() {
         val result = BigQueryPrimitive.from(StandardSQLTypeName.FLOAT64, Double::class)
         assertEquals(BigQueryPrimitive.FLOAT64, result)
       }
 
       @Test
-      fun `returns BOOL mapper for Boolean`() {
+      fun should_return_BOOL_mapper_when_type_is_BOOL_and_target_is_Boolean() {
         val result = BigQueryPrimitive.from(StandardSQLTypeName.BOOL, Boolean::class)
         assertEquals(BigQueryPrimitive.BOOL, result)
       }
 
       @Test
-      fun `returns BYTES mapper for ByteArray`() {
+      fun should_return_BYTES_mapper_when_type_is_BYTES_and_target_is_ByteArray() {
         val result = BigQueryPrimitive.from(StandardSQLTypeName.BYTES, ByteArray::class)
         assertEquals(BigQueryPrimitive.BYTES, result)
       }
 
       @Test
-      fun `returns BIG_NUMERIC mapper for BigDecimal`() {
+      fun should_return_BIG_NUMERIC_mapper_when_type_is_NUMERIC_and_target_is_BigDecimal() {
         val result = BigQueryPrimitive.from(StandardSQLTypeName.NUMERIC, BigDecimal::class)
         assertEquals(BigQueryPrimitive.BIG_NUMERIC, result)
       }
 
       @Test
-      fun `returns NUMERIC mapper for BigInteger`() {
+      fun should_return_NUMERIC_mapper_when_type_is_NUMERIC_and_target_is_BigInteger() {
         val result = BigQueryPrimitive.from(StandardSQLTypeName.NUMERIC, BigInteger::class)
         assertEquals(BigQueryPrimitive.NUMERIC, result)
       }
@@ -78,40 +78,46 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class WithTypeAndType {
       @Test
-      fun `returns STRING mapper for String type`() {
+      fun should_return_STRING_mapper_when_type_is_STRING_and_target_type_is_String() {
         val result = BigQueryPrimitive.from(StandardSQLTypeName.STRING, String::class.javaObjectType)
         assertEquals(BigQueryPrimitive.STRING, result)
       }
 
       @Test
-      fun `returns null when no match found`() {
+      fun should_return_null_when_no_entry_matches_the_given_type() {
         val result = BigQueryPrimitive.from(StandardSQLTypeName.TIMESTAMP, String::class.javaObjectType)
         assertNull(result)
       }
 
       @Test
-      fun `returns first matching mapper when target is null`() {
+      fun should_fallback_to_mapper_matching_type_only_when_target_does_not_match_any_entry_for_that_type() {
+        val result = BigQueryPrimitive.from(StandardSQLTypeName.INT64, String::class.javaObjectType)
+        assertEquals(BigQueryPrimitive.INT64, result)
+      }
+
+      @Test
+      fun should_return_first_matching_mapper_when_target_is_null() {
         val result = BigQueryPrimitive.from(StandardSQLTypeName.INT64)
-        assertNotNull(result)
+        assertEquals(BigQueryPrimitive.INT64, result)
       }
     }
 
     @Nested
     inner class WithTypeOnly {
       @Test
-      fun `returns String mapper for target type`() {
+      fun should_return_STRING_mapper_when_target_type_is_String() {
         val result = BigQueryPrimitive.from(String::class.javaObjectType)
         assertEquals(BigQueryPrimitive.STRING, result)
       }
 
       @Test
-      fun `returns Long mapper for target type`() {
+      fun should_return_INT64_mapper_when_target_type_is_Long() {
         val result = BigQueryPrimitive.from(Long::class.javaObjectType)
         assertEquals(BigQueryPrimitive.INT64, result)
       }
 
       @Test
-      fun `returns null when no match for target type`() {
+      fun should_return_null_when_no_entry_targets_the_given_type() {
         val result = BigQueryPrimitive.from(List::class.java)
         assertNull(result)
       }
@@ -126,12 +132,12 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class MapMethod {
       @Test
-      fun `returns null when FieldValue is null`() {
+      fun should_return_null_when_field_value_is_null() {
         assertNull(mapper.map(null))
       }
 
       @Test
-      fun `extracts string value from FieldValue`() {
+      fun should_extract_string_value_when_field_value_is_not_null() {
         val fieldValue = mock<FieldValue>()
         whenever(fieldValue.stringValue).thenReturn("test-string")
 
@@ -144,19 +150,19 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class ParameterMethod {
       @Test
-      fun `returns null when value is null`() {
+      fun should_return_null_when_value_is_null() {
         assertNull(mapper.parameter(null))
       }
 
       @Test
-      fun `converts String to QueryParameterValue`() {
+      fun should_convert_string_to_query_parameter_value_when_value_is_a_string() {
         val result = mapper.parameter("test-string")
 
         assertNotNull(result)
       }
 
       @Test
-      fun `converts non-String to String QueryParameterValue`() {
+      fun should_convert_non_string_to_string_query_parameter_value_when_value_is_not_a_string() {
         val result = mapper.parameter(123)
 
         assertNotNull(result)
@@ -172,12 +178,12 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class MapMethod {
       @Test
-      fun `returns null when FieldValue is null`() {
+      fun should_return_null_when_field_value_is_null() {
         assertNull(mapper.map(null))
       }
 
       @Test
-      fun `extracts long value from FieldValue`() {
+      fun should_extract_long_value_when_field_value_is_not_null() {
         val fieldValue = mock<FieldValue>()
         whenever(fieldValue.longValue).thenReturn(123456789L)
 
@@ -190,26 +196,26 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class ParameterMethod {
       @Test
-      fun `returns null when value is null`() {
+      fun should_return_null_when_value_is_null() {
         assertNull(mapper.parameter(null))
       }
 
       @Test
-      fun `converts Long to QueryParameterValue`() {
+      fun should_convert_long_to_query_parameter_value_when_value_is_a_long() {
         val result = mapper.parameter(123456789L)
 
         assertNotNull(result)
       }
 
       @Test
-      fun `converts String number to QueryParameterValue`() {
+      fun should_convert_string_number_to_query_parameter_value_when_value_is_a_numeric_string() {
         val result = mapper.parameter("123456789")
 
         assertNotNull(result)
       }
 
       @Test
-      fun `returns null when value cannot be converted to Long`() {
+      fun should_return_null_when_value_cannot_be_converted_to_long() {
         val result = mapper.parameter("not-a-number")
 
         assertNull(result)
@@ -225,12 +231,12 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class MapMethod {
       @Test
-      fun `returns null when FieldValue is null`() {
+      fun should_return_null_when_field_value_is_null() {
         assertNull(mapper.map(null))
       }
 
       @Test
-      fun `extracts int value from FieldValue`() {
+      fun should_extract_int_value_when_field_value_is_not_null() {
         val fieldValue = mock<FieldValue>()
         whenever(fieldValue.longValue).thenReturn(123456L)
 
@@ -243,22 +249,29 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class ParameterMethod {
       @Test
-      fun `returns null when value is null`() {
+      fun should_return_null_when_value_is_null() {
         assertNull(mapper.parameter(null))
       }
 
       @Test
-      fun `converts Int to QueryParameterValue`() {
+      fun should_convert_int_to_query_parameter_value_when_value_is_an_int() {
         val result = mapper.parameter(123456)
 
         assertNotNull(result)
       }
 
       @Test
-      fun `converts String number to QueryParameterValue`() {
+      fun should_convert_string_number_to_query_parameter_value_when_value_is_a_numeric_string() {
         val result = mapper.parameter("123456")
 
         assertNotNull(result)
+      }
+
+      @Test
+      fun should_return_null_when_value_cannot_be_converted_to_int() {
+        val result = mapper.parameter("not-a-number")
+
+        assertNull(result)
       }
     }
   }
@@ -271,12 +284,12 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class MapMethod {
       @Test
-      fun `returns null when FieldValue is null`() {
+      fun should_return_null_when_field_value_is_null() {
         assertNull(mapper.map(null))
       }
 
       @Test
-      fun `extracts short value from FieldValue`() {
+      fun should_extract_short_value_when_field_value_is_not_null() {
         val fieldValue = mock<FieldValue>()
         whenever(fieldValue.longValue).thenReturn(1234L)
 
@@ -289,15 +302,29 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class ParameterMethod {
       @Test
-      fun `returns null when value is null`() {
+      fun should_return_null_when_value_is_null() {
         assertNull(mapper.parameter(null))
       }
 
       @Test
-      fun `converts Short to QueryParameterValue`() {
+      fun should_convert_short_to_query_parameter_value_when_value_is_a_short() {
         val result = mapper.parameter(1234.toShort())
 
         assertNotNull(result)
+      }
+
+      @Test
+      fun should_convert_string_number_to_query_parameter_value_when_value_is_a_numeric_string() {
+        val result = mapper.parameter("1234")
+
+        assertNotNull(result)
+      }
+
+      @Test
+      fun should_return_null_when_value_cannot_be_converted_to_short() {
+        val result = mapper.parameter("not-a-number")
+
+        assertNull(result)
       }
     }
   }
@@ -310,12 +337,12 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class MapMethod {
       @Test
-      fun `returns null when FieldValue is null`() {
+      fun should_return_null_when_field_value_is_null() {
         assertNull(mapper.map(null))
       }
 
       @Test
-      fun `extracts double value from FieldValue`() {
+      fun should_extract_double_value_when_field_value_is_not_null() {
         val fieldValue = mock<FieldValue>()
         whenever(fieldValue.doubleValue).thenReturn(123.456)
 
@@ -328,26 +355,26 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class ParameterMethod {
       @Test
-      fun `returns null when value is null`() {
+      fun should_return_null_when_value_is_null() {
         assertNull(mapper.parameter(null))
       }
 
       @Test
-      fun `converts Double to QueryParameterValue`() {
+      fun should_convert_double_to_query_parameter_value_when_value_is_a_double() {
         val result = mapper.parameter(123.456)
 
         assertNotNull(result)
       }
 
       @Test
-      fun `converts String number to QueryParameterValue`() {
+      fun should_convert_string_number_to_query_parameter_value_when_value_is_a_numeric_string() {
         val result = mapper.parameter("123.456")
 
         assertNotNull(result)
       }
 
       @Test
-      fun `returns null when value cannot be converted to Double`() {
+      fun should_return_null_when_value_cannot_be_converted_to_double() {
         val result = mapper.parameter("not-a-number")
 
         assertNull(result)
@@ -363,12 +390,12 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class MapMethod {
       @Test
-      fun `returns null when FieldValue is null`() {
+      fun should_return_null_when_field_value_is_null() {
         assertNull(mapper.map(null))
       }
 
       @Test
-      fun `extracts boolean value from FieldValue`() {
+      fun should_extract_boolean_value_when_field_value_is_not_null() {
         val fieldValue = mock<FieldValue>()
         whenever(fieldValue.booleanValue).thenReturn(true)
 
@@ -381,33 +408,33 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class ParameterMethod {
       @Test
-      fun `returns null when value is null`() {
+      fun should_return_null_when_value_is_null() {
         assertNull(mapper.parameter(null))
       }
 
       @Test
-      fun `converts Boolean to QueryParameterValue`() {
+      fun should_convert_boolean_to_query_parameter_value_when_value_is_a_boolean() {
         val result = mapper.parameter(true)
 
         assertNotNull(result)
       }
 
       @Test
-      fun `converts String 'true' to QueryParameterValue`() {
+      fun should_convert_string_true_to_query_parameter_value_when_value_is_the_string_true() {
         val result = mapper.parameter("true")
 
         assertNotNull(result)
       }
 
       @Test
-      fun `converts String 'false' to QueryParameterValue`() {
+      fun should_convert_string_false_to_query_parameter_value_when_value_is_the_string_false() {
         val result = mapper.parameter("false")
 
         assertNotNull(result)
       }
 
       @Test
-      fun `returns null when value cannot be converted to Boolean`() {
+      fun should_return_null_when_value_cannot_be_converted_to_boolean() {
         val result = mapper.parameter("not-a-boolean")
 
         assertNull(result)
@@ -423,12 +450,12 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class MapMethod {
       @Test
-      fun `returns null when FieldValue is null`() {
+      fun should_return_null_when_field_value_is_null() {
         assertNull(mapper.map(null))
       }
 
       @Test
-      fun `extracts BigDecimal value from FieldValue`() {
+      fun should_extract_big_decimal_value_when_field_value_is_not_null() {
         val fieldValue = mock<FieldValue>()
         val expected = BigDecimal("123.456")
         whenever(fieldValue.numericValue).thenReturn(expected)
@@ -442,26 +469,26 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class ParameterMethod {
       @Test
-      fun `returns null when value is null`() {
+      fun should_return_null_when_value_is_null() {
         assertNull(mapper.parameter(null))
       }
 
       @Test
-      fun `converts BigDecimal to QueryParameterValue`() {
+      fun should_convert_big_decimal_to_query_parameter_value_when_value_is_a_big_decimal() {
         val result = mapper.parameter(BigDecimal("123.456"))
 
         assertNotNull(result)
       }
 
       @Test
-      fun `converts BigInteger to BigDecimal QueryParameterValue`() {
+      fun should_convert_big_integer_to_big_decimal_query_parameter_value_when_value_is_a_big_integer() {
         val result = mapper.parameter(BigInteger("123456"))
 
         assertNotNull(result)
       }
 
       @Test
-      fun `returns null when value is not BigDecimal or BigInteger`() {
+      fun should_return_null_when_value_is_neither_big_decimal_nor_big_integer() {
         val result = mapper.parameter("not-a-number")
 
         assertNull(result)
@@ -477,12 +504,12 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class MapMethod {
       @Test
-      fun `returns null when FieldValue is null`() {
+      fun should_return_null_when_field_value_is_null() {
         assertNull(mapper.map(null))
       }
 
       @Test
-      fun `extracts byte array value from FieldValue`() {
+      fun should_extract_byte_array_value_when_field_value_is_not_null() {
         val fieldValue = mock<FieldValue>()
         val expected = byteArrayOf(1, 2, 3, 4, 5)
         whenever(fieldValue.bytesValue).thenReturn(expected)
@@ -497,12 +524,12 @@ class BigQueryPrimitiveMapperTest {
     @Nested
     inner class ParameterMethod {
       @Test
-      fun `returns null when value is null`() {
+      fun should_return_null_when_value_is_null() {
         assertNull(mapper.parameter(null))
       }
 
       @Test
-      fun `converts ByteArray to QueryParameterValue`() {
+      fun should_convert_byte_array_to_query_parameter_value_when_value_is_a_byte_array() {
         val bytes = byteArrayOf(1, 2, 3, 4, 5)
 
         val result = mapper.parameter(bytes)
@@ -511,7 +538,7 @@ class BigQueryPrimitiveMapperTest {
       }
 
       @Test
-      fun `returns null when value is not ByteArray`() {
+      fun should_return_null_when_value_is_not_a_byte_array() {
         val result = mapper.parameter("not-bytes")
 
         assertNull(result)

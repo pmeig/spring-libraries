@@ -14,6 +14,8 @@ interface TestEntityRepository: JpaRepository<EntityTest, Long> {
 
   fun errorNoQuery(): String
 
+  fun batchNoQuery(): String
+
   @Query("SELECT secret FROM entity_test WHERE id = ?1 AND secret = ?2")
   fun queryWithPositional(id: Long, label: String): String
 

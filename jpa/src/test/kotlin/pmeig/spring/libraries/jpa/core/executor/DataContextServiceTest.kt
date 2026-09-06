@@ -1,5 +1,6 @@
 package pmeig.spring.libraries.jpa.core.executor
 
+import com.fasterxml.jackson.core.type.TypeReference
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -37,7 +38,7 @@ class DataContextServiceTest {
   inner class Context {
 
     @Test
-    fun `returns method name and parameters with positional naming when no Param`() {
+    fun should_name_parameters_positionally_when_no_Param_annotation() {
       val ctx = service.context(method("queryWithPositional", Long::class.java, String::class.java),
         String::class.java)
 
@@ -49,7 +50,7 @@ class DataContextServiceTest {
     }
 
     @Test
-    fun `uses Param annotation value for parameter name`() {
+    fun should_use_Param_annotation_value_when_naming_parameter() {
       val ctx = service.context(method("queryWithNamed", String::class.java),
         String::class.java)
 
@@ -59,7 +60,7 @@ class DataContextServiceTest {
     }
 
     @Test
-    fun `returns empty sql and empty postQuery flags for plain String returning method`() {
+    fun should_not_flag_map_json_or_collection_when_return_type_is_a_plain_class() {
       val ctx = service.context(method("findBySecretNameAndColumn", String::class.java, String::class.java)
       , EntityTest::class.java)
       assertFalse(ctx.map)
@@ -68,7 +69,7 @@ class DataContextServiceTest {
     }
 
     @Test
-    fun `flags json when method name ends with toJson and returns String`() {
+    fun should_flag_json_when_method_name_ends_with_toJson_and_returns_string() {
       val ctx = service.context(method("queryToJson", Long::class.java),
         String::class.java)
 
@@ -76,7 +77,42 @@ class DataContextServiceTest {
     }
 
     @Test
-    fun `is cached on second invocation`() {
+    fun should_flag_map_when_return_type_is_a_map() {
+      val mapType = object : TypeReference<Map<String, String>>() {}.type
+
+      val ctx = service.context(method("errorNoQuery"), mapType)
+
+      assertTrue(ctx.map)
+      assertFalse(ctx.collection)
+    }
+
+    @Test
+    fun should_flag_map_and_collection_when_return_type_is_a_collection_of_maps() {
+      val collectionOfMapType = object : TypeReference<List<Map<String, String>>>() {}.type
+
+      val ctx = service.context(method("errorNoQuery"), collectionOfMapType)
+
+      assertTrue(ctx.map)
+      assertTrue(ctx.collection)
+    }
+
+    @Test
+    fun should_not_flag_map_or_collection_when_return_type_is_not_parameterized() {
+      val ctx = service.context(method("errorNoQuery"), String::class.java)
+
+      assertFalse(ctx.map)
+      assertFalse(ctx.collection)
+    }
+
+    @Test
+    fun should_flag_batch_when_method_name_starts_with_batch() {
+      val ctx = service.context(method("batchNoQuery"), String::class.java)
+
+      assertTrue(ctx.batch)
+    }
+
+    @Test
+    fun should_return_same_instance_when_invoked_twice_with_a_caching_cache() {
       val backingCache = ConcurrentMapCache("dataContext")
       whenever(cacheManager.getCache(any())).thenReturn(backingCache)
 
@@ -95,14 +131,14 @@ class DataContextServiceTest {
   inner class Query {
 
     @Test
-    fun `returns null when method has no Query annotation`() {
+    fun should_return_null_when_method_has_no_Query_annotation() {
       val result = service.query(method("errorNoQuery"), String::class.java)
 
       assertNull(result)
     }
 
     @Test
-    fun `rewrites positional markers to named placeholders when params are positional`() {
+    fun should_rewrite_positional_markers_to_named_placeholders_when_parameters_are_positional() {
       val result = service.query(method("queryWithPositional",
         Long::class.java, String::class.java), String::class.java)
 
@@ -114,7 +150,7 @@ class DataContextServiceTest {
     }
 
     @Test
-    fun `keeps sql unchanged when parameters use Param annotation`() {
+    fun should_keep_sql_unchanged_when_parameters_use_Param_annotation() {
       val result = service.query(method("queryWithNamed", String::class.java), String::class.java)
 
       assertNotNull(result)
@@ -126,28 +162,36 @@ class DataContextServiceTest {
   inner class Jpa {
 
     @Test
-    fun `returns invalid context for non findBy methods`() {
+    fun should_return_invalid_context_when_method_is_not_findBy() {
       val context = service.jpa(method("errorNoQuery"))
 
       assertFalse(context.valid)
     }
 
     @Test
-    fun `returns valid context for findBy methods`() {
+    fun should_return_valid_context_when_method_is_findBy() {
       val context = service.jpa(method("findBySecretName", String::class.java))
 
       assertTrue(context.valid)
     }
 
     @Test
-    fun `returns valid context for findAllBy methods`() {
+    fun should_return_first_element_when_postQuery_applied_for_findBy() {
+      val context = service.jpa(method("findBySecretName", String::class.java))
+
+      val items = listOf("a", "b")
+      assertEquals("a", context.postQuery(items))
+    }
+
+    @Test
+    fun should_return_valid_context_when_method_is_findAllBy() {
       val context = service.jpa(method("findAllByCreated", LocalDateTime::class.java))
 
       assertTrue(context.valid)
     }
 
     @Test
-    fun `postQuery for findAllBy returns the whole collection`() {
+    fun should_return_whole_collection_when_postQuery_applied_for_findAllBy() {
       val context = service.jpa(method("findAllByCreated", LocalDateTime::class.java))
 
       val items = listOf("a", "b")
@@ -155,21 +199,30 @@ class DataContextServiceTest {
     }
 
     @Test
-    fun `parses And combinator without throwing`() {
+    fun should_return_valid_context_when_method_combines_predicates_with_And() {
       val context = service.jpa(method("findBySecretNameAndColumn", String::class.java, String::class.java))
 
       assertTrue(context.valid)
     }
 
     @Test
-    fun `parses Or combinator without throwing`() {
+    fun should_build_combined_specification_when_toSpecification_invoked_for_And_method() {
+      val context = service.jpa(method("findBySecretNameAndColumn", String::class.java, String::class.java))
+
+      val specification = context.toSpecification(arrayOf("secret", "col"))
+
+      assertNotNull(specification)
+    }
+
+    @Test
+    fun should_return_valid_context_when_method_combines_predicates_with_Or() {
       val context = service.jpa(method("findBySecretNameOrColumn", String::class.java, String::class.java))
 
       assertTrue(context.valid)
     }
 
     @Test
-    fun `accepts predicate suffixes Like, Not, In, IsNull and IsNotNull`() {
+    fun should_return_valid_context_when_method_uses_Like_Not_In_IsNull_and_IsNotNull_suffixes() {
       assertTrue(service.jpa(method("findAllBySecretNameLike", String::class.java)).valid)
       assertTrue(service.jpa(method("findAllBySecretNameIn", Collection::class.java)).valid)
       assertTrue(service.jpa(method("findAllBySecretNameIsNull")).valid)
