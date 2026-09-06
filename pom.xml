@@ -33,7 +33,7 @@
         <module>swagger</module>
         <module>error</module>
         <module>jpa</module>
-    </modules>
+    <module>sonar-report</module></modules>
 
     <developers>
         <developer>
@@ -81,7 +81,7 @@
         <kotlin.version>2.3.21</kotlin.version>
         <kotlin.test.skip>false</kotlin.test.skip>
         <kotlin.source.skip>false</kotlin.source.skip>
-    </properties>
+    <sonar.jacoco.version>0.8.15</sonar.jacoco.version><sonar.sources>${project.build.sourceDirectory}</sonar.sources><sonar.tests>${project.build.testSourceDirectory}</sonar.tests><sonar.binaries>${project.build.sourceDirectory}</sonar.binaries><sonar.java.binaries>${project.build.sourceDirectory}</sonar.java.binaries><sonar.plugin.version>5.7.0.6970</sonar.plugin.version><sonar.coverage.exclusions>**/configuration/**,**/model/**,**/properties/**,**/src/test/**,**/*Configuration.*,**/*Properties.*,**/exception/**,**/*Exception.*,**/*Helper.*,**/helper/**,**/*module.*,**/*Module.*,**/WebAdvisor*</sonar.coverage.exclusions><sonar.cpd.exclusions>**/src/test/**</sonar.cpd.exclusions><sonar.coverage.jacoco.xmlReportPaths>${maven.multiModuleProjectDirectory}/sonar-report/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths><sonar.sourceEncoding>UTF-8</sonar.sourceEncoding><sonar.qualitygate.wait>true</sonar.qualitygate.wait><sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin><sonar.language>kotlin</sonar.language><sonar.projectKey>spring-libraries</sonar.projectKey><sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis><sonar.host.url>${env.SONAR_HOST}</sonar.host.url><sonar.token>${env.SONAR_TOKEN}</sonar.token></properties>
 
     <profiles>
         <profile>
@@ -197,7 +197,7 @@
                         </execution>
                     </executions>
                 </plugin>
-            </plugins>
+            <plugin><groupId>org.jacoco</groupId><artifactId>jacoco-maven-plugin</artifactId><version>${sonar.jacoco.version}</version><executions><execution><id>prepare-agent</id><goals><goal>prepare-agent</goal></goals></execution><execution><id>report</id><phase>verify</phase><goals><goal>report-aggregate</goal></goals></execution></executions><configuration><excludes><exclude>**/*$WhenMappings.class</exclude><exclude>**/*$DefaultImpls.class</exclude><exclude>**/*Kt$*.class</exclude></excludes></configuration></plugin><plugin><groupId>org.sonarsource.scanner.maven</groupId><artifactId>sonar-maven-plugin</artifactId><version>${sonar.plugin.version}</version></plugin></plugins>
         </pluginManagement>
         <plugins>
             <plugin>
@@ -241,7 +241,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
             </plugin>
-        </plugins>
+        <plugin><groupId>org.jacoco</groupId><artifactId>jacoco-maven-plugin</artifactId><version>${sonar.jacoco.version}</version><executions><execution><id>prepare-agent</id><goals><goal>prepare-agent</goal></goals></execution><execution><id>report</id><phase>verify</phase><goals><goal>report-aggregate</goal></goals></execution></executions><configuration><excludes><exclude>**/*$WhenMappings.class</exclude><exclude>**/*$DefaultImpls.class</exclude><exclude>**/*Kt$*.class</exclude></excludes></configuration></plugin><plugin><groupId>org.sonarsource.scanner.maven</groupId><artifactId>sonar-maven-plugin</artifactId><version>${sonar.plugin.version}</version></plugin></plugins>
     </build>
 
     <dependencies>
