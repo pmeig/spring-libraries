@@ -5,7 +5,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type.SERVLET
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
-import org.springframework.web.servlet.function.ServerResponse
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
+
+@ControllerAdvice
+@ConditionalOnWebApplication(type = SERVLET)
+class SpringServletAdvisor: ResponseEntityExceptionHandler()
 
 @ControllerAdvice
 @ConditionalOnWebApplication(type = SERVLET)
@@ -14,5 +18,5 @@ class ServletAdvisor: WebAdvisorAdapter<ResponseEntity<Any>>({it.toResponse()}) 
 
 @ControllerAdvice
 @ConditionalOnWebApplication(type = REACTIVE)
-class ReactiveAdvisor: WebAdvisorAdapter<ServerResponse>({it.toReactiveResponse()}) {
+class ReactiveAdvisor: ReactiveWebAdvisor() {
 }
