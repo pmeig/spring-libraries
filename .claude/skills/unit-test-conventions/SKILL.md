@@ -84,4 +84,5 @@ The goal of every test suite is to make execution go through **all** branches an
 - Verify side effects with `verify(mock).method(...)` rather than relying only on return-value assertions, when path coverage depends on a call actually being triggered.
 - Don't bother looking for the JaCoCo or Sonar configuration; it isn't there.
 
+
 Before considering a method covered, re-read its code and mentally list every possible branch/execution path, then check that a test exists for each one.
