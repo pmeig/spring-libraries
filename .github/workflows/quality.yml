@@ -91,4 +91,5 @@ jobs:
         with:
           commit: save config sonar
           stage: .
+          force: true
           
