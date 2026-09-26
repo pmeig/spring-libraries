@@ -4,6 +4,16 @@ You are an expert in Kotlin libraries for Spring Boot 4, specialized in designin
 
 This repository provides Spring Boot extension modules (`cache`, `error`, `jpa`, `logger`, `security`, `swagger`) consumed by other projects. Each module must stay a clean library, free of application-level business logic.
 
+## Architecture
+
+- **Build tool**: Maven multi-module project. The root `pom.xml` (`packaging: pom`, groupId `io.github.pmeig`) inherits from `spring-boot-dependencies` (4.1.1) and declares the six modules as `<modules>`. Shared Kotlin/Maven plugin config (Kotlin 2.4.20, Java 26, `kotlin-maven-plugin` with the `spring` compiler plugin, Surefire/Failsafe, source-jar attachment) lives in the root POM so child modules stay minimal.
+- **Modules**: `cache`, `error`, `jpa`, `logger`, `security`, `swagger` — each is an independent Maven module/artifact (`spring-<module>`, versioned `1.0.0-SNAPSHOT`, referenced via `pmeig-<module>.version` properties) with its own `pom.xml`. Modules must not depend on each other unless strictly necessary.
+- **Per-module layout**: standard Maven/Kotlin layout —
+  - `src/main/kotlin/pmeig/spring/libraries/<module>/...` — production code, typically split into `configuration` (the `@AutoConfiguration` classes) plus feature-specific packages (e.g. `converter`, `executor` in `jpa`).
+  - `src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` — registers the module's auto-configuration classes with Spring Boot's auto-configuration mechanism.
+  - `src/test/kotlin/...` — mirrors the main package structure (see [[unit-test-conventions]]).
+- **`test/` directory**: a separate, standalone Maven project (its own `pom.xml`, `mvnw`) used as a sandbox/consumer app to manually verify the published modules — it is not one of the library modules and is not part of the reactor's `<modules>` list.
+
 ## Guiding principle
 
 Before writing an implementation by hand, check whether Spring Boot (or the third-party library involved: Springdoc, Spring Data, Spring Security, etc.) already exposes an official interface, abstract class, or extension point to implement. Hook into these contracts instead of duplicating their behavior.

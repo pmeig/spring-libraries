@@ -1,6 +1,6 @@
 ---
 name: spring-logger
-description: Explain the spring-logger module (logger/) - its purpose, correlation-id and Spring Integration log-channel machinery, dependencies, key components, test coverage, and how the quality.yml Sonar pipeline treats it. Use when asked to explain the logger module, what spring-logger does, or what it uses.
+description: Explain the spring-logger module (logger/) - its purpose, correlation-id and Spring Integration log-channel machinery, dependencies, key components, test coverage, and how the quality.yml Sonar pipeline treats it. Use when asked to explain the logger module, what spring-logger does, or what it uses. Also trigger on the short form "logger" followed by a reference (e.g. an @-mention) to a file living under `logger/src/**` - treat that as shorthand for "explain this logger module file/component".
 ---
 
 # spring-logger module explainer

@@ -1,6 +1,6 @@
 ---
 name: spring-error
-description: Explain the spring-error module (error/) - its purpose, business/technical exception hierarchy, generic advisor, dependencies, key components, test coverage, and how the quality.yml Sonar pipeline treats it. Use when asked to explain the error module, what spring-error does, or what it uses.
+description: Explain the spring-error module (error/) - its purpose, business/technical exception hierarchy, generic advisor, dependencies, key components, test coverage, and how the quality.yml Sonar pipeline treats it. Use when asked to explain the error module, what spring-error does, or what it uses. Also trigger on the short form "error" followed by a reference (e.g. an @-mention) to a file living under `error/src/**` - treat that as shorthand for "explain this error module file/component".
 ---
 
 # spring-error module explainer

@@ -1,6 +1,6 @@
 ---
 name: spring-cache
-description: Explain the spring-cache module (cache/) - its purpose, dependencies (Redis/Hazelcast backends), key components, test coverage, and how the quality.yml Sonar pipeline treats it. Use when asked to explain the cache module, what spring-cache does, or what it uses.
+description: Explain the spring-cache module (cache/) - its purpose, dependencies (Redis/Hazelcast backends), key components, test coverage, and how the quality.yml Sonar pipeline treats it. Use when asked to explain the cache module, what spring-cache does, or what it uses. Also trigger on the short form "cache" followed by a reference (e.g. an @-mention) to a file living under `cache/src/**` - treat that as shorthand for "explain this cache module file/component".
 ---
 
 # spring-cache module explainer

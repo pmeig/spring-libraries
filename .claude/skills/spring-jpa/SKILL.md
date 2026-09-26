@@ -1,6 +1,6 @@
 ---
 name: spring-jpa
-description: Explain the spring-jpa module (jpa/) - its purpose, the generic dynamic-proxy JPA repository framework and its BigQuery implementation, dependencies, key components, test coverage, and how the quality.yml Sonar pipeline treats it. Use when asked to explain the jpa module, what spring-jpa does, or what it uses.
+description: Explain the spring-jpa module (jpa/) - its purpose, the generic dynamic-proxy JPA repository framework and its BigQuery implementation, dependencies, key components, test coverage, and how the quality.yml Sonar pipeline treats it. Use when asked to explain the jpa module, what spring-jpa does, or what it uses. Also trigger on the short form "jpa" followed by a reference (e.g. an @-mention) to a file living under `jpa/src/**` - treat that as shorthand for "explain this jpa module file/component".
 ---
 
 # spring-jpa module explainer

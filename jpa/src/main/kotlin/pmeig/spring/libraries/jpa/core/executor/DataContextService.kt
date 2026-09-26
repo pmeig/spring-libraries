@@ -15,6 +15,7 @@ import pmeig.spring.libraries.jpa.core.executor.model.jpa.MethodSpecificationFac
 import java.lang.reflect.Method
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
+import java.lang.reflect.WildcardType
 import java.util.regex.Pattern
 
 private val POSITIONAL_PARAMETER_MARKER = Pattern.compile(" \\?[0-9]*")
@@ -126,12 +127,17 @@ class DataContextService(
 
   private fun checkIsMap(returnType: Type, isCollection: Boolean = false): Boolean {
     if (isCollection) {
-      val type = (returnType as ParameterizedType).actualTypeArguments[0]
+      val type = (returnType as ParameterizedType).actualTypeArguments[0].resolveUpperBound()
       return checkIsMap(type)
     }
     if (returnType !is ParameterizedType) return false
     val rawType = (returnType.rawType as Class<*>)
     return Map::class.java.isAssignableFrom(rawType)
   }
+
+  // Kotlin's declaration-site variance (e.g. `List<out E>`) surfaces as a use-site
+  // wildcard (`? extends E`) in the JVM generic signature, so nested type arguments
+  // must be unwrapped before they can be checked against ParameterizedType.
+  private fun Type.resolveUpperBound(): Type = if (this is WildcardType) upperBounds.first() else this
 
 }

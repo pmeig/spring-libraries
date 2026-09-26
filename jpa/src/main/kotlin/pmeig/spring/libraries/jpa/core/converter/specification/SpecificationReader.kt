@@ -16,6 +16,7 @@ import org.hibernate.query.Query
 import org.hibernate.query.criteria.JpaCriteriaQuery
 import org.hibernate.query.criteria.JpaCriteriaUpdate
 import org.hibernate.query.hql.spi.SqmQueryImplementor
+import org.hibernate.query.spi.SqmQuery
 import org.hibernate.query.sqm.internal.DomainParameterXref
 import org.hibernate.query.sqm.sql.SqmTranslation
 import org.hibernate.query.sqm.tree.SqmDmlStatement
@@ -121,8 +122,9 @@ class SpecificationReader<T: Any>(
     val queryImplementor = query.unwrap(SqmQueryImplementor::class.java)
     val sessionFactory = session.sessionFactory as SessionFactoryImplementor
     val statement = (queryImplementor as SqmQueryImplementor).sqmStatement
+    val queryOptions = (queryImplementor as SqmQuery<*>).queryOptions
     val translator = sessionFactory.queryEngine.sqmTranslatorFactory.createSelectTranslator(
-      statement as SqmSelectStatement, queryImplementor.queryOptions,
+      statement as SqmSelectStatement, queryOptions,
       DomainParameterXref.from(statement),
       queryImplementor.parameterBindings, queryImplementor.session.loadQueryInfluencers,
       sessionFactory.sqlTranslationEngine, true
@@ -131,7 +133,7 @@ class SpecificationReader<T: Any>(
 
     val jdbcOperation = sessionFactory.jdbcServices.dialect.sqlAstTranslatorFactory.buildSelectTranslator(
       sessionFactory, translate.sqlAst
-    ).translate(null, query.queryOptions)
+    ).translate(null, queryOptions)
 
     return createContext(jdbcOperation, translate)
   }
@@ -160,10 +162,11 @@ class SpecificationReader<T: Any>(
     val queryImplementor = mutationQuery as SqmQueryImplementor<T>
     val sessionFactory = session.sessionFactory as SessionFactoryImplementor
     val statement = queryImplementor.sqmStatement as SqmDmlStatement<*>
+    val queryOptions = (queryImplementor as SqmQuery<*>).queryOptions
 
     val translator = sessionFactory.queryEngine.sqmTranslatorFactory.createMutationTranslator(
       statement,
-      queryImplementor.queryOptions,
+      queryOptions,
       DomainParameterXref.from(statement as SqmStatement<*>),
       queryImplementor.parameterBindings,
       queryImplementor.session.loadQueryInfluencers,
@@ -174,7 +177,7 @@ class SpecificationReader<T: Any>(
 
     val jdbcOperation = sessionFactory.jdbcServices.dialect.sqlAstTranslatorFactory
       .buildMutationTranslator(sessionFactory, translate.sqlAst)
-      .translate(null, queryImplementor.queryOptions)
+      .translate(null, queryOptions)
     return createContext(jdbcOperation, translate)
   }
 

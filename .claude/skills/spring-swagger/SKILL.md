@@ -1,6 +1,6 @@
 ---
 name: spring-swagger
-description: Explain the spring-swagger module (swagger/) - its purpose, OpenAPI/springdoc setup, security lock-down, dependencies, key components, test coverage, and how the quality.yml Sonar pipeline treats it. Use when asked to explain the swagger module, what spring-swagger does, or what it uses.
+description: Explain the spring-swagger module (swagger/) - its purpose, OpenAPI/springdoc setup, security lock-down, dependencies, key components, test coverage, and how the quality.yml Sonar pipeline treats it. Use when asked to explain the swagger module, what spring-swagger does, or what it uses. Also trigger on the short form "swagger" followed by a reference (e.g. an @-mention) to a file living under `swagger/src/**` - treat that as shorthand for "explain this swagger module file/component".
 ---
 
 # spring-swagger module explainer

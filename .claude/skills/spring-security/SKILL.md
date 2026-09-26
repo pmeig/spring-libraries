@@ -1,6 +1,6 @@
 ---
 name: spring-security
-description: Explain the spring-security module (security/) - its purpose, JWT/cache authentication strategies, annotation-driven authorization, dependencies, key components, test coverage, and how the quality.yml Sonar pipeline treats it. Use when asked to explain the security module, what spring-security does, or what it uses.
+description: Explain the spring-security module (security/) - its purpose, JWT/cache authentication strategies, annotation-driven authorization, dependencies, key components, test coverage, and how the quality.yml Sonar pipeline treats it. Use when asked to explain the security module, what spring-security does, or what it uses. Also trigger on the short form "security" followed by a reference (e.g. an @-mention) to a file living under `security/src/**` - treat that as shorthand for "explain this security module file/component".
 ---
 
 # spring-security module explainer
