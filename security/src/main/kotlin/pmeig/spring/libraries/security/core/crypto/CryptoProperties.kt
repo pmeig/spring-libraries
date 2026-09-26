@@ -19,7 +19,7 @@ class CryptoProperties(
     }
   var secret: String = secret
     get() = field.ifEmpty {
-      val alphanumeric = ('a'..'z') + ('A'..'Z') + ('0'..'9')
+      val alphanumeric = (('a'..'z').plusElement(('A'..'Z'))).plusElement(('0'..'9'))
       val random = (1..16).map { alphanumeric.random() }.joinToString("")
       println("Generated crypto secret: $random")
       field = random
@@ -27,7 +27,7 @@ class CryptoProperties(
     }
 
   private fun generateSecret(): String {
-    val alphanumeric = ('a'..'z') + ('A'..'Z') + ('0'..'9')
+    val alphanumeric = ('a'..'z').plusElement(('A'..'Z')).plusElement('0'..'9')
     return (1..16).map { alphanumeric.random() }.joinToString("")
   }
 

@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
-        <version>4.0.6</version>
+        <version>4.1.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -61,7 +61,7 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <kotlin.code.style>official</kotlin.code.style>
-        <kotlin.compiler.jvmTarget>25</kotlin.compiler.jvmTarget>
+        <kotlin.compiler.jvmTarget>26</kotlin.compiler.jvmTarget>
         <argLine> </argLine>
 
 
@@ -78,7 +78,7 @@
         <pmeig-jpa.version>1.0.0-SNAPSHOT</pmeig-jpa.version>
         <pmeig-error.version>1.0.0-SNAPSHOT</pmeig-error.version>
 
-        <kotlin.version>2.3.21</kotlin.version>
+        <kotlin.version>2.4.20</kotlin.version>
         <kotlin.test.skip>false</kotlin.test.skip>
         <kotlin.source.skip>false</kotlin.source.skip>
     </properties>

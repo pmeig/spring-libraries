@@ -35,6 +35,7 @@ import java.time.Clock
 import java.time.Instant
 import java.util.Optional
 import java.util.function.Function
+import kotlin.reflect.KClass
 
 @Suppress("UNCHECKED_CAST")
 class SimpleJpaBigQueryRepository<Entity: Any, ID: Any>(
@@ -300,7 +301,7 @@ class SimpleJpaBigQueryRepository<Entity: Any, ID: Any>(
 
   override fun findOne(spec: Specification<Entity>): Optional<Entity> {
     return fromSpecification(spec).let {
-      Optional.ofNullable(client.tryEntity(metadata.reference.kotlin, it.sql))
+      Optional.ofNullable(client.tryEntity(metadata.reference.kotlin as KClass<Entity>, it.sql))
     }
   }
 

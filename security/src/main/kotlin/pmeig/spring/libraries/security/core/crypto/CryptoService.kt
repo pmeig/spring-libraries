@@ -1,7 +1,7 @@
 package pmeig.spring.libraries.security.core.crypto
 
 import org.springframework.security.crypto.codec.Hex
-import org.springframework.security.crypto.encrypt.AesBytesEncryptor
+import org.springframework.security.crypto.encrypt.AesGcmBytesEncryptor
 import org.springframework.stereotype.Service
 
 @Service
@@ -21,9 +21,7 @@ class CryptoService(
     return encryptor.decrypt(Hex.decode(value)).decodeToString()
   }
 
-  private fun createAESEncryptor(cryptoProperties: CryptoProperties): AesBytesEncryptor = AesBytesEncryptor(
-    cryptoProperties.secret,
-    cryptoProperties.salt
-  )
+  private fun createAESEncryptor(cryptoProperties: CryptoProperties): AesGcmBytesEncryptor =
+    AesGcmBytesEncryptor.withPassword(cryptoProperties.secret, cryptoProperties.salt).build()
 
 }
