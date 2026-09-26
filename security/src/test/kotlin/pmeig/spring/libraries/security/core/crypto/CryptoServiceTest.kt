@@ -47,10 +47,12 @@ class CryptoServiceTest {
     }
 
     @Test
-    fun `should produce the same ciphertext for the same input (deterministic)`() {
+    fun `should produce different ciphertext for the same input across calls (random IV) but decrypt to the same value`() {
       val result1 = cryptoService.encrypt("hello")
       val result2 = cryptoService.encrypt("hello")
-      assertEquals(result1, result2)
+      assertNotEquals(result1, result2)
+      assertEquals("hello", cryptoService.decrypt(result1))
+      assertEquals("hello", cryptoService.decrypt(result2))
     }
 
     @Test
